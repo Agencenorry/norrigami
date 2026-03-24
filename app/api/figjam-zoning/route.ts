@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { store } from "./save/route";
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -18,31 +19,20 @@ export async function GET(request: NextRequest) {
   if (!projectId) {
     return NextResponse.json(
       { error: "projectId manquant" },
-      {
-        status: 400,
-        headers: { "Access-Control-Allow-Origin": "*" },
-      }
+      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 
-  const { readFile } = await import("fs/promises");
-  const { join } = await import("path");
+  const project = store.get(projectId);
 
-  try {
-    const filePath = join(process.cwd(), "tmp", `${projectId}.json`);
-    const content = await readFile(filePath, "utf-8");
-    const project = JSON.parse(content);
-
-    return NextResponse.json(project, {
-      headers: { "Access-Control-Allow-Origin": "*" },
-    });
-  } catch {
+  if (!project) {
     return NextResponse.json(
-      { error: "Projet introuvable" },
-      {
-        status: 404,
-        headers: { "Access-Control-Allow-Origin": "*" },
-      }
+      { error: "Projet introuvable — clique d'abord sur Exporter vers FigJam dans Norrigami" },
+      { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
+
+  return NextResponse.json(project, {
+    headers: { "Access-Control-Allow-Origin": "*" },
+  });
 }
