@@ -30,10 +30,13 @@ Règles :
 - Pas d'anglicismes, tout en français
 - Optimise chaque texte pour le SEO et le GEO`;
 
-async function createWithRetry(params: Parameters<typeof client.messages.create>[0], retries = 3) {
+async function createWithRetry(
+  params: Parameters<typeof client.messages.create>[0],
+  retries = 3
+): Promise<Anthropic.Message> {
   for (let i = 0; i < retries; i++) {
     try {
-      return await client.messages.create(params);
+      return await client.messages.create({ ...params, stream: false }) as Anthropic.Message;
     } catch (error: unknown) {
       const isRateLimit = (error as { status?: number })?.status === 429;
       if (isRateLimit && i < retries - 1) {
@@ -43,6 +46,7 @@ async function createWithRetry(params: Parameters<typeof client.messages.create>
       } else throw error;
     }
   }
+  throw new Error("Max retries reached");
 }
 
 export async function POST(request: NextRequest) {
@@ -98,8 +102,7 @@ export async function POST(request: NextRequest) {
       messages: [{ role: "user", content: userContent }],
     });
 
-    const msg = copyMsg as { content: { type: string; text?: string }[] };
-    const copy = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
+    const copy = copyMsg.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
     return NextResponse.json({ copy });
   } catch (error) {
     console.error(error);
