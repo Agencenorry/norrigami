@@ -250,7 +250,7 @@ export default function Home() {
 
       const apiUrl = ngrokUrl
         ? `${ngrokUrl}/api/figjam-zoning`
-        : `http://localhost:3000/api/figjam-zoning`;
+        : `https://norrigami.vercel.app/api/figjam-zoning`;
 
       alert(
         `✓ Zoning prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Norrigami et renseigne :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`
@@ -358,6 +358,9 @@ export default function Home() {
   };
 
   const canGenerate = brief.trim() || files.length > 0 || pdfUrl.trim();
+  const figJamApiUrl = ngrokUrl
+    ? `${ngrokUrl}/api/figjam-zoning`
+    : `https://norrigami.vercel.app/api/figjam-zoning`;
 
   // ————————————————————————————
   // VUE ACCUEIL
@@ -382,10 +385,9 @@ export default function Home() {
                   setNgrokUrl(e.target.value);
                   localStorage.setItem("norrigami-ngrok", e.target.value);
                 }}
-                placeholder="https://xxxx.ngrok-free.app"
-                className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 w-64"
+                placeholder="URL ngrok (optionnel)"
+                className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 w-56"
               />
-              <span className="text-xs text-zinc-600 whitespace-nowrap">URL ngrok</span>
             </div>
             <button onClick={createProject} className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
               + Nouveau projet
@@ -597,18 +599,17 @@ export default function Home() {
               </div>
             </div>
 
-            {ngrokUrl && (
-              <div className="bg-purple-950/20 border border-purple-900/30 rounded-xl p-4 flex items-start gap-3">
-                <span className="text-lg">🎨</span>
-                <div>
-                  <div className="text-purple-400 text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
-                  <div className="text-zinc-500 text-xs leading-relaxed">
-                    URL : <span className="text-zinc-300 font-mono">{ngrokUrl}/api/figjam-zoning</span><br />
-                    ID : <span className="text-zinc-300 font-mono">{currentProject.id}</span>
-                  </div>
+            {/* Info FigJam */}
+            <div className="bg-purple-950/20 border border-purple-900/30 rounded-xl p-4 flex items-start gap-3">
+              <span className="text-lg">🎨</span>
+              <div>
+                <div className="text-purple-400 text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
+                <div className="text-zinc-500 text-xs leading-relaxed">
+                  URL : <span className="text-zinc-300 font-mono">{figJamApiUrl}</span><br />
+                  ID : <span className="text-zinc-300 font-mono">{currentProject.id}</span>
                 </div>
               </div>
-            )}
+            </div>
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
               <div>{renderMarkdown(currentProject.zoning)}</div>
