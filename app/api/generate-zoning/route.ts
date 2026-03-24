@@ -48,10 +48,13 @@ Si le site a des rubriques avec sous-pages, crée d'abord une entrée de menu (p
 Si des sprints sont fournis, indique le numéro de sprint entre crochets après chaque nom de page : [Sprint 1], [Sprint 2], etc.
 Les pages d'un même sprint auront la même couleur dans Miro.`;
 
-async function createWithRetry(params: Parameters<typeof client.messages.create>[0], retries = 3) {
+async function createWithRetry(
+  params: Parameters<typeof client.messages.create>[0],
+  retries = 3
+): Promise<Anthropic.Message> {
   for (let i = 0; i < retries; i++) {
     try {
-      return await client.messages.create(params);
+      return await client.messages.create({ ...params, stream: false }) as Anthropic.Message;
     } catch (error: unknown) {
       const isRateLimit = (error as { status?: number })?.status === 429;
       if (isRateLimit && i < retries - 1) {
@@ -61,6 +64,7 @@ async function createWithRetry(params: Parameters<typeof client.messages.create>
       } else throw error;
     }
   }
+  throw new Error("Max retries reached");
 }
 
 async function buildContent(files: File[], pdfUrl: string, prompt: string): Promise<Anthropic.MessageParam["content"]> {
@@ -110,7 +114,7 @@ export async function POST(request: NextRequest) {
       messages: [{ role: "user", content: zoningContent }],
     });
 
-    const zoning = zoningMsg!.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
+    const zoning = zoningMsg.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
     return NextResponse.json({ zoning });
   } catch (error) {
     console.error(error);
