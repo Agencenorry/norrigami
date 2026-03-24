@@ -48,6 +48,7 @@ export default function Home() {
   const [loadingCopy, setLoadingCopy] = useState(false);
   const [loadingMiro, setLoadingMiro] = useState(false);
   const [loadingMiroCopy, setLoadingMiroCopy] = useState(false);
+  const [loadingFigJamCopy, setLoadingFigJamCopy] = useState(false);
 
   // Error
   const [error, setError] = useState<string | null>(null);
@@ -132,44 +133,24 @@ export default function Home() {
 
     for (const line of lines) {
       const trimmed = line.trim();
-
       if (trimmed.match(/^#{1,3} /)) {
         const rawLabel = trimmed.replace(/^#+\s*/, "").replace(/^\d+\.\s*/, "").trim();
-        if (
-          rawLabel.toLowerCase().includes("zoning") ||
-          rawLabel.toLowerCase().includes("architecture") ||
-          rawLabel.length < 2
-        ) continue;
-
+        if (rawLabel.toLowerCase().includes("zoning") || rawLabel.toLowerCase().includes("architecture") || rawLabel.length < 2) continue;
         if (currentPage) pages.push(currentPage);
-
         const sprintMatch = rawLabel.match(/\[Sprint\s*(\d+)\]/i);
         const sprint = sprintMatch ? parseInt(sprintMatch[1]) : null;
         const cleanLabel = rawLabel.replace(/\[Sprint\s*\d+\]/gi, "").trim();
-        const type =
-          cleanLabel.toLowerCase().includes("mention") ||
-          cleanLabel.toLowerCase().includes("politique") ||
-          cleanLabel.toLowerCase().includes("404")
-            ? "utility"
-            : pages.length === 0 ? "main" : "secondary";
-
+        const type = cleanLabel.toLowerCase().includes("mention") || cleanLabel.toLowerCase().includes("politique") || cleanLabel.toLowerCase().includes("404")
+          ? "utility" : pages.length === 0 ? "main" : "secondary";
         currentPage = { cleanLabel, type, sprint, sections: [] };
-
       } else if (trimmed.startsWith("- ") && currentPage) {
         const content = trimmed.slice(2);
         const boldMatch = content.match(/^\*\*([^*]+)\*\*/);
-        const label = boldMatch
-          ? boldMatch[1].replace(/\s*:\s*$/, "").trim()
-          : content.split(":")[0].replace(/\*\*/g, "").trim();
-        const objective = content
-          .replace(/^\*\*[^*]+\*\*\s*:?\s*/, "")
-          .replace(/^\s*:\s*/, "")
-          .replace(/\*\*/g, "")
-          .trim();
+        const label = boldMatch ? boldMatch[1].replace(/\s*:\s*$/, "").trim() : content.split(":")[0].replace(/\*\*/g, "").trim();
+        const objective = content.replace(/^\*\*[^*]+\*\*\s*:?\s*/, "").replace(/^\s*:\s*/, "").replace(/\*\*/g, "").trim();
         if (label.length > 1) currentPage.sections.push({ label, objective });
       }
     }
-
     if (currentPage) pages.push(currentPage);
     return pages.filter((p) => p.cleanLabel && p.sections.length > 0);
   }
@@ -178,7 +159,6 @@ export default function Home() {
     if (!brief.trim() && files.length === 0 && !pdfUrl.trim()) return;
     setLoadingZoning(true);
     setError(null);
-
     try {
       const formData = new FormData();
       formData.append("brief", brief);
@@ -187,11 +167,9 @@ export default function Home() {
       formData.append("sprints", sprints);
       formData.append("pdfUrl", pdfUrl);
       files.forEach((f) => formData.append("files", f));
-
       const response = await fetch("/api/generate-zoning", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-
       const projectName = brief.slice(0, 40) || "Projet sans nom";
       updateProject({ zoning: data.zoning, brief, url, notes, sprints, name: projectName });
       setStep("zoning");
@@ -206,21 +184,14 @@ export default function Home() {
     if (!currentProject?.zoning) return;
     setLoadingMiro(true);
     setError(null);
-
     try {
       const response = await fetch("/api/miro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          zoningText: currentProject.zoning,
-          projectName: currentProject.name,
-          sprints: currentProject.sprints,
-        }),
+        body: JSON.stringify({ zoningText: currentProject.zoning, projectName: currentProject.name, sprints: currentProject.sprints }),
       });
-
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-
       updateProject({ miroUrl: data.boardUrl, miroBoardId: data.boardId });
       window.open(data.boardUrl, "_blank");
     } catch (err: unknown) {
@@ -233,30 +204,42 @@ export default function Home() {
   const handleExportFigJam = async () => {
     if (!currentProject?.zoning) return;
     setError(null);
-
     try {
       const pages = parseZoningForFigJam(currentProject.zoning);
       const response = await fetch("/api/figjam-zoning/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: currentProject.id, projectName: currentProject.name, pages }),
+      });
+      if (!response.ok) throw new Error("Erreur sauvegarde");
+      const apiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://norrigami.vercel.app/api/figjam-zoning`;
+      alert(`✓ Zoning prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Norrigami et renseigne :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erreur export FigJam");
+    }
+  };
+
+  const handleExportCopyToFigJam = async () => {
+    if (!currentProject?.copy) return;
+    setLoadingFigJamCopy(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/figjam-copy/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectId: currentProject.id,
           projectName: currentProject.name,
-          pages,
+          copyText: currentProject.copy,
         }),
       });
-
-      if (!response.ok) throw new Error("Erreur sauvegarde");
-
-      const apiUrl = ngrokUrl
-        ? `${ngrokUrl}/api/figjam-zoning`
-        : `https://norrigami.vercel.app/api/figjam-zoning`;
-
-      alert(
-        `✓ Zoning prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Norrigami et renseigne :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`
-      );
+      if (!response.ok) throw new Error("Erreur sauvegarde copy FigJam");
+      const apiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://norrigami.vercel.app/api/figjam-zoning`;
+      alert(`✓ Copy prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Norrigami et clique sur "Générer les wireframes copy" :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erreur export FigJam");
+      setError(err instanceof Error ? err.message : "Erreur export copy FigJam");
+    } finally {
+      setLoadingFigJamCopy(false);
     }
   };
 
@@ -264,7 +247,6 @@ export default function Home() {
     if (!currentProject?.zoning) return;
     setLoadingCopy(true);
     setError(null);
-
     try {
       const formData = new FormData();
       formData.append("zoning", currentProject.zoning);
@@ -275,11 +257,9 @@ export default function Home() {
       formData.append("keywords", keywords);
       if (copyBriefFile) formData.append("copyBriefFile", copyBriefFile);
       if (keywordsFile) formData.append("keywordsFile", keywordsFile);
-
       const response = await fetch("/api/generate-copy", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-
       updateProject({ copy: data.copy, copyBrief, keywords });
       setStep("copy");
       setActiveTab("copy");
@@ -294,18 +274,12 @@ export default function Home() {
     if (!currentProject?.copy || !currentProject?.miroBoardId) return;
     setLoadingMiroCopy(true);
     setError(null);
-
     try {
       const response = await fetch("/api/miro-copy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          boardId: currentProject.miroBoardId,
-          copyText: currentProject.copy,
-          zoningText: currentProject.zoning,
-        }),
+        body: JSON.stringify({ boardId: currentProject.miroBoardId, copyText: currentProject.copy, zoningText: currentProject.zoning }),
       });
-
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       window.open(currentProject.miroUrl || "", "_blank");
@@ -319,22 +293,18 @@ export default function Home() {
   const handleFeedback = async () => {
     if (!feedback.trim() || !currentProject) return;
     setFeedbackLoading(true);
-
     const current = feedbackTarget === "zoning" ? currentProject.zoning : currentProject.copy;
     const systemPrompt = feedbackTarget === "zoning"
       ? "Tu es un expert en architecture web et UX. Tu vas corriger et améliorer un zoning de site web selon les instructions données."
       : "Tu es un expert en copywriting CRO, SEO et GEO. Tu vas corriger et améliorer un copywriting de site web selon les instructions données.";
-
     try {
       const response = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ current, feedback, systemPrompt, brief, notes, url }),
       });
-
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-
       if (feedbackTarget === "zoning") updateProject({ zoning: data.result });
       else updateProject({ copy: data.result });
       setFeedback("");
@@ -358,9 +328,7 @@ export default function Home() {
   };
 
   const canGenerate = brief.trim() || files.length > 0 || pdfUrl.trim();
-  const figJamApiUrl = ngrokUrl
-    ? `${ngrokUrl}/api/figjam-zoning`
-    : `https://norrigami.vercel.app/api/figjam-zoning`;
+  const figJamApiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://norrigami.vercel.app/api/figjam-zoning`;
 
   // ————————————————————————————
   // VUE ACCUEIL
@@ -381,10 +349,7 @@ export default function Home() {
               <input
                 type="text"
                 value={ngrokUrl}
-                onChange={(e) => {
-                  setNgrokUrl(e.target.value);
-                  localStorage.setItem("norrigami-ngrok", e.target.value);
-                }}
+                onChange={(e) => { setNgrokUrl(e.target.value); localStorage.setItem("norrigami-ngrok", e.target.value); }}
                 placeholder="URL ngrok (optionnel)"
                 className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 w-56"
               />
@@ -472,11 +437,7 @@ export default function Home() {
             return (
               <div key={s.key} className="flex items-center gap-2">
                 <div className={`flex items-center gap-2 text-xs ${isActive ? "text-amber-400" : isDone ? "text-zinc-400" : "text-zinc-600"}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${
-                    isDone ? "bg-amber-500 border-amber-500 text-zinc-950" :
-                    isActive ? "border-amber-500 text-amber-400" :
-                    "border-zinc-700 text-zinc-600"
-                  }`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${isDone ? "bg-amber-500 border-amber-500 text-zinc-950" : isActive ? "border-amber-500 text-amber-400" : "border-zinc-700 text-zinc-600"}`}>
                     {isDone ? "✓" : i + 1}
                   </div>
                   <span>{s.label}</span>
@@ -599,7 +560,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Info FigJam */}
             <div className="bg-purple-950/20 border border-purple-900/30 rounded-xl p-4 flex items-start gap-3">
               <span className="text-lg">🎨</span>
               <div>
@@ -727,11 +687,14 @@ export default function Home() {
                 )}
                 {currentProject.miroBoardId && (
                   <button onClick={handleExportCopyToMiro} disabled={loadingMiroCopy} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed">
-                    {loadingMiroCopy ? "Export en cours..." : "🟦 Exporter wireframes vers Miro"}
+                    {loadingMiroCopy ? "Export en cours..." : "🟦 Wireframes Miro"}
                   </button>
                 )}
                 <button onClick={handleExportFigJam} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer">
-                  🎨 Exporter vers FigJam
+                  🎨 Zoning FigJam
+                </button>
+                <button onClick={handleExportCopyToFigJam} disabled={loadingFigJamCopy} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed">
+                  {loadingFigJamCopy ? "Export..." : "✍️ Wireframes FigJam"}
                 </button>
               </div>
             </div>
@@ -780,12 +743,13 @@ export default function Home() {
               )}
             </div>
 
-            <div className="bg-amber-950/20 border border-amber-900/30 rounded-xl p-5 flex gap-4">
-              <span className="text-lg">👁</span>
+            <div className="bg-purple-950/20 border border-purple-900/30 rounded-xl p-4 flex items-start gap-3">
+              <span className="text-lg">🎨</span>
               <div>
-                <div className="text-amber-400 text-xs font-semibold uppercase tracking-widest mb-1">Note pour Mélina</div>
-                <div className="text-zinc-500 text-sm leading-relaxed">
-                  Utilise "Exporter wireframes vers Miro" pour ajouter le copywriting mis en situation dans le board Miro existant.
+                <div className="text-purple-400 text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
+                <div className="text-zinc-500 text-xs leading-relaxed">
+                  URL : <span className="text-zinc-300 font-mono">{figJamApiUrl}</span><br />
+                  ID : <span className="text-zinc-300 font-mono">{currentProject.id}</span>
                 </div>
               </div>
             </div>
