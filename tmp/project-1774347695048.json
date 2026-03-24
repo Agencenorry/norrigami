@@ -1,0 +1,243 @@
+{
+  "pages": [
+    {
+      "cleanLabel": "Page : Accueil",
+      "type": "main",
+      "sprint": 1,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Orienter l'utilisateur vers les sections clés du site"
+        },
+        {
+          "label": "Accroche",
+          "objective": "Positionner Emedias comme l'agence premium pour transformer vos enjeux de formation en solutions digitales performantes"
+        },
+        {
+          "label": "Nos services",
+          "objective": "Présenter clairement les 5 offres avec focus sur la production e-learning (service principal)"
+        },
+        {
+          "label": "Pourquoi nous faire confiance",
+          "objective": "Mettre en avant la réactivité, l'efficacité et le rapport qualité-prix"
+        },
+        {
+          "label": "Chiffres clés",
+          "objective": "Valoriser la crédibilité avec volumétries impressionnantes (300+ contenus, 55 modules, délais courts)"
+        },
+        {
+          "label": "Cas client mis en avant",
+          "objective": "Showcaser 2-3 projets phares pour démontrer l'expertise"
+        },
+        {
+          "label": "Appel à l'action",
+          "objective": "Pousser vers la consultation de tous les cas clients"
+        },
+        {
+          "label": "Preuves sociales",
+          "objective": "Rassurer avec les logos des grands comptes (Accor, Total, Intermarché, Bouygues)"
+        },
+        {
+          "label": "FAQ SEO/AEO/GEO",
+          "objective": "Répondre aux 5-6 questions les plus fréquentes sur le digital learning"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations légales et contact"
+        }
+      ]
+    },
+    {
+      "cleanLabel": "Page : Parcours production e-learning",
+      "type": "secondary",
+      "sprint": 2,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Maintenir l'orientation dans l'arborescence"
+        },
+        {
+          "label": "Accroche",
+          "objective": "Transformer vos contenus de formation en parcours digitaux engageants et efficaces"
+        },
+        {
+          "label": "Notre approche méthodologique",
+          "objective": "Détailler le process de création de A à Z"
+        },
+        {
+          "label": "Gammes de qualité",
+          "objective": "Expliquer les différents niveaux de production selon le budget"
+        },
+        {
+          "label": "Nos expertises techniques",
+          "objective": "Motion design, interactivité, multilingue, déploiement LMS"
+        },
+        {
+          "label": "Cas clients liés au service",
+          "objective": "2-3 projets concrets (Groupama, Bouygues, Intermarché)"
+        },
+        {
+          "label": "Équipe dédiée",
+          "objective": "Présenter les profils qui interviennent sur ce type de projet"
+        },
+        {
+          "label": "Appel à l'action",
+          "objective": "Prise de rendez-vous pour discuter du projet"
+        },
+        {
+          "label": "FAQ SEO/AEO/GEO",
+          "objective": "5-6 questions spécifiques à la production e-learning"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations légales et contact"
+        }
+      ]
+    },
+    {
+      "cleanLabel": "Page : Cas clients liste",
+      "type": "secondary",
+      "sprint": 3,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Maintenir la cohérence de navigation"
+        },
+        {
+          "label": "Introduction",
+          "objective": "Découvrez comment nous avons accompagné nos clients dans leur transformation digitale"
+        },
+        {
+          "label": "Filtres",
+          "objective": "Par secteur, type de projet, volumétrie pour faciliter la recherche"
+        },
+        {
+          "label": "Liste des cas clients",
+          "objective": "Présentation en grille avec visuels, volumétrie et secteur d'activité"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations légales et contact"
+        }
+      ]
+    },
+    {
+      "cleanLabel": "Page : Cas client détail",
+      "type": "secondary",
+      "sprint": 3,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Maintenir la cohérence de navigation"
+        },
+        {
+          "label": "Introduction",
+          "objective": "Contextualiser le projet et ses enjeux spécifiques"
+        },
+        {
+          "label": "Le défi",
+          "objective": "Présenter la problématique client et les contraintes"
+        },
+        {
+          "label": "Notre solution",
+          "objective": "Détailler l'approche méthodologique et les choix techniques"
+        },
+        {
+          "label": "Résultats obtenus",
+          "objective": "Volumétrie, délais, retours client, nombre d'apprenants touchés"
+        },
+        {
+          "label": "Visuels du projet",
+          "objective": "Captures d'écran et éléments visuels du rendu final"
+        },
+        {
+          "label": "Appel à l'action prise de RDV",
+          "objective": "Proposer un échange pour un projet similaire"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations légales et contact"
+        }
+      ]
+    },
+    {
+      "cleanLabel": "Page : À propos",
+      "type": "secondary",
+      "sprint": 3,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Maintenir la cohérence de navigation"
+        },
+        {
+          "label": "Introduction",
+          "objective": "Présenter la vision et la mission d'Emedias depuis 2023"
+        },
+        {
+          "label": "Notre histoire",
+          "objective": "Raconter l'évolution de freelances à agence premium"
+        },
+        {
+          "label": "L'équipe fondatrice",
+          "objective": "Présenter Grégoire et Louis avec leurs expertises complémentaires"
+        },
+        {
+          "label": "Notre réseau de talents",
+          "objective": "Valoriser l'équipe étendue de spécialistes"
+        },
+        {
+          "label": "Nos valeurs",
+          "objective": "Réactivité, efficacité, qualité, accompagnement personnalisé"
+        },
+        {
+          "label": "Nos ambitions",
+          "objective": "Vision de développement et positionnement haut de gamme"
+        },
+        {
+          "label": "FAQ SEO/AEO/GEO",
+          "objective": "5-6 questions sur l'agence et son fonctionnement"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations légales et contact"
+        }
+      ]
+    },
+    {
+      "cleanLabel": "Page : Contact",
+      "type": "secondary",
+      "sprint": 3,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Maintenir la cohérence de navigation"
+        },
+        {
+          "label": "Introduction",
+          "objective": "Parlons de votre projet de transformation digitale"
+        },
+        {
+          "label": "Formulaire de contact",
+          "objective": "Collecte des informations projet avec qualification du besoin"
+        },
+        {
+          "label": "Embed Calendly",
+          "objective": "Prise de rendez-vous directe en ligne"
+        },
+        {
+          "label": "Infos pratiques et disponibilités",
+          "objective": "Coordonnées, délais de réponse, process d'échange"
+        },
+        {
+          "label": "FAQ",
+          "objective": "3 questions maximum sur le processus de contact et premiers échanges"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations légales et contact"
+        }
+      ]
+    }
+  ],
+  "projectName": "Objectif du nouveau site internet\nLe sit"
+}

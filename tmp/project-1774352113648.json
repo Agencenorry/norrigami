@@ -1,0 +1,259 @@
+{
+  "pages": [
+    {
+      "cleanLabel": "Page d'accueil",
+      "type": "main",
+      "sprint": 1,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Permettre l'accès rapide aux sections importantes"
+        },
+        {
+          "label": "Accroche",
+          "objective": "Capter l'attention des directeurs formation avec un positionnement agence premium"
+        },
+        {
+          "label": "Preuves sociales",
+          "objective": "Rassurer avec les logos des grands comptes (Accor, Total, Intermarché, Bouygues)"
+        },
+        {
+          "label": "Services",
+          "objective": "Présenter les 5 offres avec focus sur la production e-learning"
+        },
+        {
+          "label": "Cas client mis en avant",
+          "objective": "Mettre en valeur 2-3 réalisations emblématiques + CTA vers la liste complète"
+        },
+        {
+          "label": "Processus",
+          "objective": "Expliquer la méthode pour rassurer sur la gestion de projet"
+        },
+        {
+          "label": "Équipe",
+          "objective": "Présenter l'agence et les fondateurs pour renforcer la crédibilité"
+        },
+        {
+          "label": "Chiffres clés",
+          "objective": "Valoriser les résultats (300+ contenus produits, 55 modules, délais respectés)"
+        },
+        {
+          "label": "Appel à l'action",
+          "objective": "Pousser vers la prise de contact"
+        },
+        {
+          "label": "FAQ SEO/AEO/GEO",
+          "objective": "Répondre aux 5-6 questions les plus courantes"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations pratiques et navigation secondaire"
+        }
+      ]
+    },
+    {
+      "cleanLabel": "Page Services - Production e-learning",
+      "type": "secondary",
+      "sprint": 2,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Navigation principale"
+        },
+        {
+          "label": "Accroche",
+          "objective": "Valoriser l'expertise en production e-learning sur mesure"
+        },
+        {
+          "label": "Bénéfices",
+          "objective": "Expliquer les avantages du digital learning pour les grands groupes"
+        },
+        {
+          "label": "Types de productions",
+          "objective": "Détailler les niveaux de qualité proposés"
+        },
+        {
+          "label": "Processus détaillé",
+          "objective": "Rassurer sur la méthodologie de A à Z"
+        },
+        {
+          "label": "Cas clients liés",
+          "objective": "Présenter 2-3 cas clients spécifiques à ce service"
+        },
+        {
+          "label": "Technologies",
+          "objective": "Présenter les outils maîtrisés (Storyline, etc.)"
+        },
+        {
+          "label": "Équipe dédiée",
+          "objective": "Valoriser les compétences de l'équipe de production"
+        },
+        {
+          "label": "Appel à l'action",
+          "objective": "Pousser vers la prise de RDV"
+        },
+        {
+          "label": "FAQ SEO/AEO/GEO",
+          "objective": "5-6 questions spécifiques à la production e-learning"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations pratiques et navigation secondaire"
+        }
+      ]
+    },
+    {
+      "cleanLabel": "Page Cas clients liste",
+      "type": "secondary",
+      "sprint": 3,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Navigation principale"
+        },
+        {
+          "label": "Introduction",
+          "objective": "Présenter la diversité des projets réalisés"
+        },
+        {
+          "label": "Filtres",
+          "objective": "Permettre de filtrer par secteur, type de projet, volume"
+        },
+        {
+          "label": "Liste des cas clients",
+          "objective": "Grid des réalisations avec visuels et métriques"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations pratiques et navigation secondaire"
+        }
+      ]
+    },
+    {
+      "cleanLabel": "Page Cas client détail",
+      "type": "secondary",
+      "sprint": 3,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Navigation principale"
+        },
+        {
+          "label": "Introduction",
+          "objective": "Contextualiser le projet et ses enjeux"
+        },
+        {
+          "label": "Contexte client",
+          "objective": "Présenter la problématique initiale"
+        },
+        {
+          "label": "Solution proposée",
+          "objective": "Détailler l'approche et la méthodologie"
+        },
+        {
+          "label": "Réalisation",
+          "objective": "Montrer le résultat avec captures d'écran"
+        },
+        {
+          "label": "Métriques",
+          "objective": "Quantifier les résultats (volume, délais, nombre de versions)"
+        },
+        {
+          "label": "Témoignage client",
+          "objective": "Valoriser la satisfaction client si possible"
+        },
+        {
+          "label": "Appel à l'action prise de RDV",
+          "objective": "Le prospect est qualifié après consultation"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations pratiques et navigation secondaire"
+        }
+      ]
+    },
+    {
+      "cleanLabel": "Page À propos",
+      "type": "secondary",
+      "sprint": 3,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Navigation principale"
+        },
+        {
+          "label": "Introduction",
+          "objective": "Présenter l'agence et son positionnement"
+        },
+        {
+          "label": "Histoire",
+          "objective": "Raconter la création et l'évolution depuis 2023"
+        },
+        {
+          "label": "Équipe",
+          "objective": "Présenter Grégoire et Louis avec leurs expertises"
+        },
+        {
+          "label": "Valeurs",
+          "objective": "Mettre en avant réactivité, qualité, efficacité"
+        },
+        {
+          "label": "Réseau de freelances",
+          "objective": "Expliquer le modèle agence avec experts spécialisés"
+        },
+        {
+          "label": "Chiffres de croissance",
+          "objective": "Valoriser l'évolution du CA et la montée en gamme"
+        },
+        {
+          "label": "Vision",
+          "objective": "Présenter les ambitions de développement"
+        },
+        {
+          "label": "FAQ SEO/AEO/GEO",
+          "objective": "5-6 questions sur l'agence et son fonctionnement"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations pratiques et navigation secondaire"
+        }
+      ]
+    },
+    {
+      "cleanLabel": "Page Contact",
+      "type": "secondary",
+      "sprint": 3,
+      "sections": [
+        {
+          "label": "Navigation",
+          "objective": "Navigation principale"
+        },
+        {
+          "label": "Introduction",
+          "objective": "Présenter les modalités de prise de contact"
+        },
+        {
+          "label": "Formulaire de contact",
+          "objective": "Permettre la qualification des demandes"
+        },
+        {
+          "label": "Embed Calendly",
+          "objective": "Faciliter la prise de RDV directe"
+        },
+        {
+          "label": "Infos pratiques et disponibilités",
+          "objective": "Horaires, délais de réponse, process commercial"
+        },
+        {
+          "label": "FAQ",
+          "objective": "3 questions maximum sur le process de contact"
+        },
+        {
+          "label": "Footer",
+          "objective": "Informations pratiques et navigation secondaire"
+        }
+      ]
+    }
+  ],
+  "projectName": "Objectif du nouveau site internet\nLe sit"
+}
