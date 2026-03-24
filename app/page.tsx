@@ -61,15 +61,15 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"zoning" | "copy">("zoning");
 
   useEffect(() => {
-    const saved = localStorage.getItem("agent-melina-projects");
+    const saved = localStorage.getItem("norrigami-projects");
     if (saved) setProjects(JSON.parse(saved));
-    const savedNgrok = localStorage.getItem("agent-melina-ngrok");
+    const savedNgrok = localStorage.getItem("norrigami-ngrok");
     if (savedNgrok) setNgrokUrl(savedNgrok);
   }, []);
 
   const saveProjects = (updated: Project[]) => {
     setProjects(updated);
-    localStorage.setItem("agent-melina-projects", JSON.stringify(updated));
+    localStorage.setItem("norrigami-projects", JSON.stringify(updated));
   };
 
   const createProject = () => {
@@ -253,7 +253,7 @@ export default function Home() {
         : `http://localhost:3000/api/figjam-zoning`;
 
       alert(
-        `✓ Zoning prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Agent Mélina et renseigne :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`
+        `✓ Zoning prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Norrigami et renseigne :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`
       );
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur export FigJam");
@@ -367,9 +367,9 @@ export default function Home() {
       <main className="min-h-screen bg-zinc-950 text-zinc-100">
         <div className="border-b border-zinc-900 px-8 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-zinc-950 font-bold text-sm">M</div>
+            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-zinc-950 font-bold text-sm">N</div>
             <div>
-              <div className="font-semibold text-sm">Agent Mélina</div>
+              <div className="font-semibold text-sm">Norrigami</div>
               <div className="text-xs text-zinc-600 uppercase tracking-widest">Zoning · Copywriting CRO/SEO</div>
             </div>
           </div>
@@ -380,7 +380,7 @@ export default function Home() {
                 value={ngrokUrl}
                 onChange={(e) => {
                   setNgrokUrl(e.target.value);
-                  localStorage.setItem("agent-melina-ngrok", e.target.value);
+                  localStorage.setItem("norrigami-ngrok", e.target.value);
                 }}
                 placeholder="https://xxxx.ngrok-free.app"
                 className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 w-64"
@@ -452,7 +452,7 @@ export default function Home() {
           <button onClick={() => setView("home")} className="text-zinc-600 hover:text-zinc-300 cursor-pointer text-sm">← Projets</button>
           <div className="w-px h-5 bg-zinc-800" />
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-zinc-950 font-bold text-sm">M</div>
+            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-zinc-950 font-bold text-sm">N</div>
             <div className="font-semibold text-sm">{currentProject?.name || "Nouveau projet"}</div>
           </div>
         </div>
@@ -597,7 +597,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Info FigJam si ngrokUrl renseigné */}
             {ngrokUrl && (
               <div className="bg-purple-950/20 border border-purple-900/30 rounded-xl p-4 flex items-start gap-3">
                 <span className="text-lg">🎨</span>

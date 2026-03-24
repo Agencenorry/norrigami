@@ -3,30 +3,32 @@ import { NextRequest, NextResponse } from "next/server";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_COPY = `Tu es un expert en copywriting CRO, SEO et GEO. Tu travailles pour une agence de création et refonte de sites web.
+const SYSTEM_COPY = `Tu es un expert en copywriting CRO, SEO et GEO (Generative Engine Optimization). Tu travailles pour une agence de création et refonte de sites web.
 
-À partir du zoning validé et du brief, génère le copywriting complet. Même ordre de pages et de blocs que le zoning (mêmes titres de pages et mêmes noms de blocs).
+À partir du zoning validé et du brief copywriting fournis, génère le copywriting complet du site.
 
-FORMAT OBLIGATOIRE pour chaque bloc — utilise les champs pertinents, mets « — » seul sur une ligne pour un champ vide :
+Pour chaque page du zoning, génère le copywriting de chaque bloc dans l'ordre exact du zoning.
 
-## [Nom de la page exact du zoning]
+Utilise ce format strict :
 
-### [Nom du bloc exact du zoning]
-**Titre** : [H1 ou titre principal si pertinent, sinon —]
-**Sous-titre** : [accroche courte si pertinent, sinon —]
-**Paragraphe** : [corps de texte, arguments, liste en phrases ; peut faire plusieurs phrases]
-**CTA** : [texte du bouton ou appel à l'action si pertinent, sinon —]
+## [Nom de la page]
 
-Champs selon le type de bloc :
-- Navigation : **Entrées** : entrée1 | entrée2 | entrée3 (les autres champs en —)
-- Footer : **Paragraphe** pour les colonnes / liens, ou **Entrées** pour la liste de liens
-- CTA seul : surtout **CTA**, le reste en —
-- FAQ : **Question 1** : … puis **Réponse 1** : …, **Question 2** : …, **Réponse 2** : … (autant que nécessaire)
-- Formulaire : **Paragraphe** pour consignes, **CTA** pour le bouton d'envoi
+### [Nom du bloc]
+[Copywriting du bloc]
 
-Entre chaque bloc : ligne --- seule.
+---
 
-Règles : français, pas d'anglicismes, SEO/GEO, brief et mots-clés respectés.`;
+Règles :
+- Respecte EXACTEMENT l'ordre des pages et des blocs du zoning
+- Pour les blocs Accroche : rédige un H1 percutant + sous-titre
+- Pour les blocs CTA : rédige uniquement le texte du bouton
+- Pour les blocs FAQ : rédige les questions ET les réponses complètes optimisées SEO/GEO
+- Pour les blocs Navigation : liste les entrées de menu
+- Pour les blocs Footer : liste les liens et informations
+- Appuie-toi sur le brief copy, le ton, l'angle éditorial et les mots-clés fournis
+- Intègre naturellement les mots-clés SEO dans les textes
+- Pas d'anglicismes, tout en français
+- Optimise chaque texte pour le SEO et le GEO`;
 
 async function createWithRetry(params: Parameters<typeof client.messages.create>[0], retries = 3) {
   for (let i = 0; i < retries; i++) {
@@ -96,7 +98,8 @@ export async function POST(request: NextRequest) {
       messages: [{ role: "user", content: userContent }],
     });
 
-    const copy = copyMsg!.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
+    const msg = copyMsg as { content: { type: string; text?: string }[] };
+    const copy = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
     return NextResponse.json({ copy });
   } catch (error) {
     console.error(error);
