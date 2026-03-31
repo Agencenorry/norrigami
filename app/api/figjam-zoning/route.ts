@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { store } from "./save/route";
+import { supabase } from "@/lib/supabase";
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -23,16 +23,21 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const project = store.get(projectId);
+  const { data, error } = await supabase
+    .from("norrigami_figjam_store")
+    .select("*")
+    .eq("project_id", projectId)
+    .single();
 
-  if (!project) {
+  if (error || !data) {
     return NextResponse.json(
-      { error: "Projet introuvable — clique d'abord sur Exporter vers FigJam dans Norrigami" },
+      { error: "Projet introuvable — clique d'abord sur Exporter vers FigJam" },
       { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 
-  return NextResponse.json(project, {
-    headers: { "Access-Control-Allow-Origin": "*" },
-  });
+  return NextResponse.json(
+    { pages: data.pages, projectName: data.project_name },
+    { headers: { "Access-Control-Allow-Origin": "*" } }
+  );
 }

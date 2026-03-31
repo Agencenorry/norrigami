@@ -27,6 +27,7 @@ export default function Home() {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [step, setStep] = useState<ProjectStep>("brief");
   const [ngrokUrl, setNgrokUrl] = useState("");
+  const [loadingProjects, setLoadingProjects] = useState(true);
 
   // Form zoning
   const [brief, setBrief] = useState("");
@@ -62,15 +63,46 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"zoning" | "copy">("zoning");
 
   useEffect(() => {
-    const saved = localStorage.getItem("norrigami-projects");
-    if (saved) setProjects(JSON.parse(saved));
+    fetchProjects();
     const savedNgrok = localStorage.getItem("norrigami-ngrok");
     if (savedNgrok) setNgrokUrl(savedNgrok);
   }, []);
 
-  const saveProjects = (updated: Project[]) => {
-    setProjects(updated);
-    localStorage.setItem("norrigami-projects", JSON.stringify(updated));
+  const fetchProjects = async () => {
+    setLoadingProjects(true);
+    try {
+      const response = await fetch("/api/projects");
+      const data = await response.json();
+      if (data.projects) {
+        setProjects(data.projects.map((p: Record<string, string>) => ({
+          id: p.id,
+          name: p.name,
+          createdAt: p.created_at,
+          brief: p.brief || "",
+          url: p.url || "",
+          notes: p.notes || "",
+          sprints: p.sprints || "",
+          zoning: p.zoning || null,
+          copy: p.copy || null,
+          miroUrl: p.miro_url || null,
+          miroBoardId: p.miro_board_id || null,
+          copyBrief: p.copy_brief || "",
+          keywords: p.keywords || "",
+        })));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  const saveProject = async (project: Project) => {
+    await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(project),
+    });
   };
 
   const createProject = () => {
@@ -106,16 +138,20 @@ export default function Home() {
     setView("project");
   };
 
-  const updateProject = (updated: Partial<Project>) => {
+  const updateProject = async (updated: Partial<Project>) => {
     if (!currentProject) return;
     const newProject = { ...currentProject, ...updated };
     setCurrentProject(newProject);
-    const all = projects.filter((p) => p.id !== newProject.id);
-    saveProjects([newProject, ...all]);
+    setProjects((prev) => {
+      const all = prev.filter((p) => p.id !== newProject.id);
+      return [newProject, ...all];
+    });
+    await saveProject(newProject);
   };
 
-  const deleteProject = (id: string) => {
-    saveProjects(projects.filter((p) => p.id !== id));
+  const deleteProject = async (id: string) => {
+    await fetch(`/api/projects?id=${id}`, { method: "DELETE" });
+    setProjects((prev) => prev.filter((p) => p.id !== id));
   };
 
   const handleFiles = (incoming: FileList | null) => {
@@ -171,7 +207,7 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       const projectName = brief.slice(0, 40) || "Projet sans nom";
-      updateProject({ zoning: data.zoning, brief, url, notes, sprints, name: projectName });
+      await updateProject({ zoning: data.zoning, brief, url, notes, sprints, name: projectName });
       setStep("zoning");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
@@ -192,7 +228,7 @@ export default function Home() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      updateProject({ miroUrl: data.boardUrl, miroBoardId: data.boardId });
+      await updateProject({ miroUrl: data.boardUrl, miroBoardId: data.boardId });
       window.open(data.boardUrl, "_blank");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur Miro");
@@ -227,11 +263,7 @@ export default function Home() {
       const response = await fetch("/api/figjam-copy/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectId: currentProject.id,
-          projectName: currentProject.name,
-          copyText: currentProject.copy,
-        }),
+        body: JSON.stringify({ projectId: currentProject.id, projectName: currentProject.name, copyText: currentProject.copy }),
       });
       if (!response.ok) throw new Error("Erreur sauvegarde copy FigJam");
       const apiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://norrigami.vercel.app/api/figjam-zoning`;
@@ -260,7 +292,7 @@ export default function Home() {
       const response = await fetch("/api/generate-copy", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      updateProject({ copy: data.copy, copyBrief, keywords });
+      await updateProject({ copy: data.copy, copyBrief, keywords });
       setStep("copy");
       setActiveTab("copy");
     } catch (err: unknown) {
@@ -305,8 +337,8 @@ export default function Home() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      if (feedbackTarget === "zoning") updateProject({ zoning: data.result });
-      else updateProject({ copy: data.result });
+      if (feedbackTarget === "zoning") await updateProject({ zoning: data.result });
+      else await updateProject({ copy: data.result });
       setFeedback("");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
@@ -366,7 +398,12 @@ export default function Home() {
             <p className="text-zinc-500 text-sm">Retrouvez tous vos projets clients.</p>
           </div>
 
-          {projects.length === 0 ? (
+          {loadingProjects ? (
+            <div className="text-center py-24 space-y-4">
+              <div className="text-3xl animate-pulse">✦</div>
+              <p className="text-zinc-500 text-sm">Chargement des projets...</p>
+            </div>
+          ) : projects.length === 0 ? (
             <div className="text-center py-24 space-y-4">
               <div className="text-5xl">📁</div>
               <p className="text-zinc-500">Aucun projet pour l'instant</p>
@@ -416,7 +453,7 @@ export default function Home() {
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
       <div className="border-b border-zinc-900 px-8 py-5 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={() => setView("home")} className="text-zinc-600 hover:text-zinc-300 cursor-pointer text-sm">← Projets</button>
+          <button onClick={() => { setView("home"); fetchProjects(); }} className="text-zinc-600 hover:text-zinc-300 cursor-pointer text-sm">← Projets</button>
           <div className="w-px h-5 bg-zinc-800" />
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-zinc-950 font-bold text-sm">N</div>
@@ -687,7 +724,7 @@ export default function Home() {
                 )}
                 {currentProject.miroBoardId && (
                   <button onClick={handleExportCopyToMiro} disabled={loadingMiroCopy} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed">
-                    {loadingMiroCopy ? "Export en cours..." : "🟦 Wireframes Miro"}
+                    {loadingMiroCopy ? "Export..." : "🟦 Wireframes Miro"}
                   </button>
                 )}
                 <button onClick={handleExportFigJam} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer">

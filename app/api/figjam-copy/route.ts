@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { copyStore } from "./save/route";
+import { supabase } from "@/lib/supabase";
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -23,16 +23,21 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const project = copyStore.get(projectId);
+  const { data, error } = await supabase
+    .from("norrigami_figjam_store")
+    .select("*")
+    .eq("project_id", projectId)
+    .single();
 
-  if (!project) {
+  if (error || !data || !data.copy_text) {
     return NextResponse.json(
-      { error: "Copy introuvable — clique d'abord sur Exporter wireframes vers FigJam" },
+      { error: "Copy introuvable — clique d'abord sur Wireframes FigJam dans Norrigami" },
       { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
 
-  return NextResponse.json(project, {
-    headers: { "Access-Control-Allow-Origin": "*" },
-  });
+  return NextResponse.json(
+    { copyText: data.copy_text },
+    { headers: { "Access-Control-Allow-Origin": "*" } }
+  );
 }
