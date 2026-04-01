@@ -105,8 +105,7 @@ Sous-titre : [2-3 phrases]
 Contenu : [Pour chaque témoignage :
   - Citation (2 à 4 phrases, entre guillemets)
   - Prénom Nom
-  - Poste / Entreprise
-  - Note ou label de satisfaction]
+  - Poste / Entreprise]
 
 ### FAQ
 Sur-titre : [2-3 mots]
@@ -121,19 +120,11 @@ CTA : [Bouton principal]
 Réassurance : [1-3 arguments]
 
 ### FORMULAIRE DE CONTACT
-Sur-titre : [2-3 mots. Ex : "Parlons-en"]
+Sur-titre : [2-3 mots]
 Titre : [1-2 lignes]
-Sous-titre : [2-3 phrases, ton chaleureux, rassurer sur le délai de réponse]
-Champs : [Liste des champs avec leur label et placeholder]
+Sous-titre : [2-3 phrases]
 CTA : [Bouton d'envoi]
-Confirmation : [Message post-envoi, 1-2 phrases rassurantes]
 Réassurance : [1-3 arguments]
-
-### PRISE DE RDV / CALENDLY
-Sur-titre : [2-3 mots. Ex : "Réservez un appel"]
-Titre : [1-2 lignes orienté bénéfice. Ex : "Discutons de votre projet en 30 minutes"]
-Sous-titre : [2-3 phrases précisant ce qui se passera pendant l'appel]
-Réassurance : [1-3 arguments. Ex : "Gratuit • Sans engagement • 30 min chrono"]
 
 ### FOOTER
 Accroche : [1 phrase courte]
@@ -172,6 +163,65 @@ async function createWithRetry(
   throw new Error("Max retries reached");
 }
 
+// Extraire les pages du zoning
+function extractPages(zoning: string): { name: string; content: string }[] {
+  const pages: { name: string; content: string }[] = [];
+  const lines = zoning.split('\n');
+  let currentPage: { name: string; content: string } | null = null;
+
+  for (const line of lines) {
+    const pageMatch = line.match(/^#{1,2}\s+(.+)/) || line.match(/^Page\s*:\s*(.+)/i) || line.match(/^-+\s*(.+)\s*-+/);
+    if (pageMatch) {
+      if (currentPage) pages.push(currentPage);
+      currentPage = { name: pageMatch[1].trim(), content: line + '\n' };
+    } else if (currentPage) {
+      currentPage.content += line + '\n';
+    }
+  }
+  if (currentPage) pages.push(currentPage);
+
+  // Si pas de pages détectées, traiter le zoning entier comme une seule page
+  if (pages.length === 0) {
+    pages.push({ name: 'Site complet', content: zoning });
+  }
+
+  return pages;
+}
+
+// Générer le copy pour une seule page
+async function generatePageCopy(
+  pageName: string,
+  pageZoning: string,
+  context: string,
+  pdfContent?: { type: "document"; source: { type: "base64"; media_type: "application/pdf"; data: string } }
+): Promise<string> {
+  const userContent: Anthropic.MessageParam["content"] = [];
+
+  if (pdfContent) {
+    userContent.push(pdfContent as Anthropic.DocumentBlockParam);
+  }
+
+  const prompt = `${context}
+
+### Zoning de la page à traiter
+${pageZoning}
+
+Génère UNIQUEMENT le copywriting pour cette page "${pageName}". Respecte exactement la structure du zoning.`;
+
+  userContent.push({ type: "text", text: prompt });
+
+  const msg = await createWithRetry({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 4000,
+    system: SYSTEM_COPY,
+    messages: [{ role: "user", content: userContent }],
+  });
+
+  return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
+}
+
+export const maxDuration = 120;
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -185,16 +235,15 @@ export async function POST(request: NextRequest) {
     const copyBriefFile = formData.get("copyBriefFile") as File | null;
     const keywordsFile = formData.get("keywordsFile") as File | null;
 
-    const userContent: Anthropic.MessageParam["content"] = [];
-
-    // Ajouter le PDF du brief copy si fourni
+    // Préparer le PDF si fourni
+    let pdfContent: { type: "document"; source: { type: "base64"; media_type: "application/pdf"; data: string } } | undefined;
     if (copyBriefFile && copyBriefFile.size > 0) {
       const arrayBuffer = await copyBriefFile.arrayBuffer();
       const base64 = Buffer.from(arrayBuffer).toString("base64");
-      userContent.push({
+      pdfContent = {
         type: "document",
         source: { type: "base64", media_type: "application/pdf", data: base64 },
-      } as Anthropic.DocumentBlockParam);
+      };
     }
 
     // Lire le CSV des mots-clés si fourni
@@ -204,31 +253,39 @@ export async function POST(request: NextRequest) {
       keywordsFromFile = text.replace(/,/g, "\n").trim();
     }
 
-    // Construire le prompt texte
-    let userPrompt = "Voici les informations pour générer le copywriting :\n\n";
-    if (brief) userPrompt += `### Brief client\n${brief}\n\n`;
-    if (url) userPrompt += `### URL du site existant\n${url}\n\n`;
-    if (notes) userPrompt += `### Notes d'entretien\n${notes}\n\n`;
-    if (copyBrief) userPrompt += `### Brief copywriting\n${copyBrief}\n\n`;
+    // Construire le contexte commun
+    let context = "Voici les informations pour générer le copywriting :\n\n";
+    if (brief) context += `### Brief client\n${brief}\n\n`;
+    if (url) context += `### URL du site existant\n${url}\n\n`;
+    if (notes) context += `### Notes d'entretien\n${notes}\n\n`;
+    if (copyBrief) context += `### Brief copywriting\n${copyBrief}\n\n`;
     if (keywords || keywordsFromFile) {
-      userPrompt += `### Mots-clés SEO\n${keywords}\n${keywordsFromFile}\n\n`;
+      context += `### Mots-clés SEO\n${keywords || ""}\n${keywordsFromFile}\n\n`;
     }
-    if (zoning) userPrompt += `### Zoning validé\n${zoning}\n\n`;
-    userPrompt += "Génère le copywriting complet en respectant exactement la structure du zoning.";
 
-    userContent.push({ type: "text", text: userPrompt });
+    // Extraire les pages du zoning
+    const pages = extractPages(zoning || "");
 
-    const copyMsg = await createWithRetry({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 16000,
-      system: SYSTEM_COPY,
-      messages: [{ role: "user", content: userContent }],
-    });
+    // Générer le copy pour chaque page en parallèle (par lots de 3 max)
+    const allCopies: string[] = [];
+    const batchSize = 3;
 
-    const copy = copyMsg.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
+    for (let i = 0; i < pages.length; i += batchSize) {
+      const batch = pages.slice(i, i + batchSize);
+      const batchResults = await Promise.all(
+        batch.map(page => generatePageCopy(page.name, page.content, context, pdfContent))
+      );
+      allCopies.push(...batchResults);
+    }
+
+    const copy = allCopies.join('\n\n');
     return NextResponse.json({ copy });
+
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Erreur lors de la génération du copywriting" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erreur lors de la génération du copywriting" },
+      { status: 500 }
+    );
   }
 }
