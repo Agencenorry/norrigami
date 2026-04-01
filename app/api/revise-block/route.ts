@@ -15,33 +15,60 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { blockLabel, blockContent, instruction, pageLabel } = await request.json();
+    const { blockLabel, blockContent, instruction, pageLabel, history } = await request.json();
 
-    const msg = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
-      messages: [{
-        role: "user",
-        content: `Tu es un expert en copywriting CRO, SEO et GEO. Tu vas corriger un bloc de copywriting selon les instructions données.
+    const systemPrompt = `Tu es un expert en copywriting CRO, SEO et GEO. Tu aides à réviser des blocs de copywriting pour un site web.
 
-Page : ${pageLabel}
-Bloc : ${blockLabel}
-Contenu actuel :
+Contexte :
+- Page : ${pageLabel}
+- Bloc : ${blockLabel}
+- Contenu actuel du bloc :
 ${blockContent}
 
-Instructions de correction : ${instruction}
+Tu peux :
+1. Réviser directement le bloc selon les instructions → retourne JSON avec "revised" (nouveau contenu complet) ET "message" (courte explication)
+2. Répondre à une question ou demander des précisions → retourne JSON avec seulement "message" (pas de "revised")
 
-Retourne UNIQUEMENT le nouveau contenu du bloc, sans introduction ni commentaire. Garde exactement le même format (titres, listes, etc.).`,
-      }],
+IMPORTANT : Réponds TOUJOURS en JSON valide avec ce format :
+- Si tu révises : {"revised": "...", "message": "..."}
+- Si tu discutes : {"message": "..."}
+
+Retourne UNIQUEMENT le JSON, sans markdown ni backticks.`;
+
+    const messages: Anthropic.MessageParam[] = [];
+
+    // Ajouter l'historique de conversation
+    if (history && history.length > 0) {
+      for (const msg of history) {
+        messages.push({ role: msg.role, content: msg.content });
+      }
+    } else {
+      messages.push({ role: "user", content: instruction });
+    }
+
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2000,
+      system: systemPrompt,
+      messages,
     });
 
-    const revised = (msg as Anthropic.Message).content
+    const text = response.content
       .map((b) => (b.type === "text" ? b.text : ""))
-      .join("\n");
+      .join("\n")
+      .trim();
 
-    return NextResponse.json({ revised }, { headers: CORS_HEADERS });
+    let parsed;
+    try {
+      const clean = text.replace(/```json\n?|\n?```/g, "").trim();
+      parsed = JSON.parse(clean);
+    } catch {
+      parsed = { message: text };
+    }
+
+    return NextResponse.json(parsed, { headers: CORS_HEADERS });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Erreur révision bloc" }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ error: "Erreur révision" }, { status: 500, headers: CORS_HEADERS });
   }
 }
