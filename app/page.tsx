@@ -539,7 +539,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Mode import zoning PDF */}
             {hasExistingZoning ? (
               <div className="space-y-4">
                 <div
@@ -579,7 +578,6 @@ export default function Home() {
                 )}
               </div>
             ) : (
-              /* Mode normal brief + génération zoning */
               <>
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-widest text-zinc-500">Brief client</label>
@@ -800,6 +798,12 @@ export default function Home() {
                 <p className="text-zinc-500 text-sm mt-1">Zoning et copywriting prêts.</p>
               </div>
               <div className="flex gap-3 flex-wrap">
+                <button
+                  onClick={() => setStep("copy-brief")}
+                  className="border border-zinc-800 hover:border-zinc-600 px-4 py-2 rounded-lg text-xs text-zinc-400 transition-colors cursor-pointer"
+                >
+                  🔄 Regénérer le copy
+                </button>
                 <button onClick={() => navigator.clipboard.writeText((currentProject.zoning || "") + "\n\n" + (currentProject.copy || ""))} className="border border-zinc-800 hover:border-zinc-600 px-4 py-2 rounded-lg text-xs text-zinc-400 transition-colors cursor-pointer">
                   📋 Copier tout
                 </button>
