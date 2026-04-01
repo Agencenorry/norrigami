@@ -1,0 +1,7 @@
+{
+    "functions": {
+      "app/api/generate-copy/route.ts": {
+        "maxDuration": 120
+      }
+    }
+  }

@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
 
     const copyMsg = await createWithRetry({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 8000,
+      max_tokens: 16000,
       system: SYSTEM_COPY,
       messages: [{ role: "user", content: userContent }],
     });
