@@ -25,15 +25,37 @@ function extractPages(zoning: string): { name: string; content: string }[] {
   const pages: { name: string; content: string }[] = [];
   const lines = zoning.split("\n");
   let currentPage: { name: string; content: string } | null = null;
+
   for (const line of lines) {
-    const pageMatch = line.match(/^#{1,2}\s+(.+)/) || line.match(/^Page\s*:\s*(.+)/i) || line.match(/^-+\s*(.+)\s*-+/);
-    if (pageMatch) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const isMdHeader = trimmed.match(/^#{1,2}\s+(.+)/);
+    const isPagePrefix = trimmed.match(/^Page\s*:\s*(.+)/i);
+    const isDashHeader = trimmed.match(/^-{3,}\s*(.+)\s*-{3,}/);
+    // Ligne en MAJUSCULES sans puce ni préfixe = titre de page
+    const isUppercaseTitle =
+      !trimmed.startsWith("*") &&
+      !trimmed.startsWith("-") &&
+      !trimmed.startsWith("#") &&
+      trimmed === trimmed.toUpperCase() &&
+      trimmed.length > 3;
+
+    const match = isMdHeader || isPagePrefix || isDashHeader;
+    const pageName = match
+      ? match[1].trim()
+      : isUppercaseTitle
+        ? trimmed
+        : null;
+
+    if (pageName) {
       if (currentPage) pages.push(currentPage);
-      currentPage = { name: pageMatch[1].trim(), content: line + "\n" };
+      currentPage = { name: pageName, content: line + "\n" };
     } else if (currentPage) {
       currentPage.content += line + "\n";
     }
   }
+
   if (currentPage) pages.push(currentPage);
   if (pages.length === 0) pages.push({ name: "Site complet", content: zoning });
   return pages;
