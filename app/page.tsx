@@ -33,13 +33,17 @@ function extractPages(zoning: string): { name: string; content: string }[] {
     const isMdHeader = trimmed.match(/^#{1,2}\s+(.+)/);
     const isPagePrefix = trimmed.match(/^Page\s*:\s*(.+)/i);
     const isDashHeader = trimmed.match(/^-{3,}\s*(.+)\s*-{3,}/);
-    // Ligne en MAJUSCULES sans puce ni préfixe = titre de page
+
+    // Ligne en majuscules : pas de puce, pas de #, pas de :, que des majuscules/chiffres/espaces/tirets
     const isUppercaseTitle =
       !trimmed.startsWith("*") &&
       !trimmed.startsWith("-") &&
       !trimmed.startsWith("#") &&
-      trimmed === trimmed.toUpperCase() &&
-      trimmed.length > 3;
+      !trimmed.includes(":") &&
+      trimmed.length > 3 &&
+      /^[A-ZÀÂÄÉÈÊËÎÏÔÖÙÛÜÇŒÆ0-9\s\-\/'.()]+$/i.test(trimmed) &&
+      trimmed === trimmed.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().normalize("NFC") ||
+      /^[A-Z0-9\s\-\/'.()ÀÂÄÉÈÊËÎÏÔÖÙÛÜÇŒÆ]+$/.test(trimmed) && trimmed.length > 3 && !trimmed.startsWith("*") && !trimmed.startsWith("-");
 
     const match = isMdHeader || isPagePrefix || isDashHeader;
     const pageName = match
