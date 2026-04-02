@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -144,80 +144,30 @@ RÈGLES GÉNÉRALES
 - Ton orienté bénéfice client, jamais centré sur l'agence
 - Pas de texte lorem ipsum, tout doit être réel et utilisable directement`;
 
-async function createWithRetry(
-  params: Parameters<typeof client.messages.create>[0],
-  retries = 3
-): Promise<Anthropic.Message> {
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await client.messages.create({ ...params, stream: false }) as Anthropic.Message;
-    } catch (error: unknown) {
-      const isRateLimit = (error as { status?: number })?.status === 429;
-      if (isRateLimit && i < retries - 1) {
-        const retryAfter = (error as { headers?: Headers })?.headers?.get("retry-after");
-        const waitSeconds = retryAfter ? parseInt(retryAfter) + 2 : 30;
-        await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
-      } else throw error;
-    }
-  }
-  throw new Error("Max retries reached");
-}
-
-// Extraire les pages du zoning
 function extractPages(zoning: string): { name: string; content: string }[] {
   const pages: { name: string; content: string }[] = [];
-  const lines = zoning.split('\n');
+  const lines = zoning.split("\n");
   let currentPage: { name: string; content: string } | null = null;
 
   for (const line of lines) {
-    const pageMatch = line.match(/^#{1,2}\s+(.+)/) || line.match(/^Page\s*:\s*(.+)/i) || line.match(/^-+\s*(.+)\s*-+/);
+    const pageMatch =
+      line.match(/^#{1,2}\s+(.+)/) ||
+      line.match(/^Page\s*:\s*(.+)/i) ||
+      line.match(/^-+\s*(.+)\s*-+/);
     if (pageMatch) {
       if (currentPage) pages.push(currentPage);
-      currentPage = { name: pageMatch[1].trim(), content: line + '\n' };
+      currentPage = { name: pageMatch[1].trim(), content: line + "\n" };
     } else if (currentPage) {
-      currentPage.content += line + '\n';
+      currentPage.content += line + "\n";
     }
   }
   if (currentPage) pages.push(currentPage);
 
-  // Si pas de pages détectées, traiter le zoning entier comme une seule page
   if (pages.length === 0) {
-    pages.push({ name: 'Site complet', content: zoning });
+    pages.push({ name: "Site complet", content: zoning });
   }
 
   return pages;
-}
-
-// Générer le copy pour une seule page
-async function generatePageCopy(
-  pageName: string,
-  pageZoning: string,
-  context: string,
-  pdfContent?: { type: "document"; source: { type: "base64"; media_type: "application/pdf"; data: string } }
-): Promise<string> {
-  const userContent: Anthropic.MessageParam["content"] = [];
-
-  if (pdfContent) {
-    userContent.push(pdfContent as Anthropic.DocumentBlockParam);
-  }
-
-  const prompt = `${context}
-
-### Zoning de la page à traiter
-${pageZoning}
-
-Génère UNIQUEMENT le copywriting pour cette page "${pageName}". Respecte exactement la structure du zoning.`;
-
-  userContent.push({ type: "text", text: prompt });
-
-  const msg = await createWithRetry({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 4000,
-    system: SYSTEM_COPY,
-    messages: [{ role: "user", content: userContent }],
-  });
-
-  return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
 }
 
 export const maxDuration = 120;
@@ -236,11 +186,11 @@ export async function POST(request: NextRequest) {
     const keywordsFile = formData.get("keywordsFile") as File | null;
 
     // Préparer le PDF si fourni
-    let pdfContent: { type: "document"; source: { type: "base64"; media_type: "application/pdf"; data: string } } | undefined;
+    let pdfBlock: Anthropic.DocumentBlockParam | null = null;
     if (copyBriefFile && copyBriefFile.size > 0) {
       const arrayBuffer = await copyBriefFile.arrayBuffer();
       const base64 = Buffer.from(arrayBuffer).toString("base64");
-      pdfContent = {
+      pdfBlock = {
         type: "document",
         source: { type: "base64", media_type: "application/pdf", data: base64 },
       };
@@ -263,29 +213,88 @@ export async function POST(request: NextRequest) {
       context += `### Mots-clés SEO\n${keywords || ""}\n${keywordsFromFile}\n\n`;
     }
 
-    // Extraire les pages du zoning
     const pages = extractPages(zoning || "");
 
-    // Générer le copy pour chaque page en parallèle (par lots de 3 max)
-    const allCopies: string[] = [];
-    const batchSize = 3;
+    // Créer un stream ReadableStream pour envoyer les résultats au fur et à mesure
+    const encoder = new TextEncoder();
 
-    for (let i = 0; i < pages.length; i += batchSize) {
-      const batch = pages.slice(i, i + batchSize);
-      const batchResults = await Promise.all(
-        batch.map(page => generatePageCopy(page.name, page.content, context, pdfContent))
-      );
-      allCopies.push(...batchResults);
-    }
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const allCopies: string[] = [];
+          const batchSize = 2;
 
-    const copy = allCopies.join('\n\n');
-    return NextResponse.json({ copy });
+          for (let i = 0; i < pages.length; i += batchSize) {
+            const batch = pages.slice(i, i + batchSize);
 
+            const batchResults = await Promise.all(
+              batch.map(async (page) => {
+                const userContent: Anthropic.MessageParam["content"] = [];
+
+                if (pdfBlock) userContent.push(pdfBlock);
+
+                const prompt = `${context}\n\n### Zoning de la page à traiter\n${page.content}\n\nGénère UNIQUEMENT le copywriting pour cette page "${page.name}". Respecte exactement la structure du zoning.`;
+                userContent.push({ type: "text", text: prompt });
+
+                // Streaming Anthropic pour chaque page
+                let pageText = "";
+                const stream = await client.messages.stream({
+                  model: "claude-sonnet-4-20250514",
+                  max_tokens: 3000,
+                  system: SYSTEM_COPY,
+                  messages: [{ role: "user", content: userContent }],
+                });
+
+                for await (const chunk of stream) {
+                  if (
+                    chunk.type === "content_block_delta" &&
+                    chunk.delta.type === "text_delta"
+                  ) {
+                    pageText += chunk.delta.text;
+                    // Envoyer chaque chunk au client
+                    controller.enqueue(
+                      encoder.encode(
+                        `data: ${JSON.stringify({ chunk: chunk.delta.text })}\n\n`
+                      )
+                    );
+                  }
+                }
+
+                return pageText;
+              })
+            );
+
+            allCopies.push(...batchResults);
+          }
+
+          // Signaler la fin
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`)
+          );
+          controller.close();
+        } catch (error) {
+          const errMsg =
+            error instanceof Error ? error.message : "Erreur inconnue";
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ error: errMsg })}\n\n`)
+          );
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Erreur lors de la génération du copywriting" },
-      { status: 500 }
-    );
+    const errMsg = error instanceof Error ? error.message : "Erreur inconnue";
+    return new Response(JSON.stringify({ error: errMsg }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
