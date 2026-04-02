@@ -69,8 +69,12 @@ export default function Home() {
 
   useEffect(() => {
     fetchProjects();
-    const savedNgrok = localStorage.getItem("norrigami-ngrok");
-    if (savedNgrok) setNgrokUrl(savedNgrok);
+    const savedNgrok =
+      localStorage.getItem("kore-ngrok") ?? localStorage.getItem("norrigami-ngrok");
+    if (savedNgrok) {
+      setNgrokUrl(savedNgrok);
+      localStorage.setItem("kore-ngrok", savedNgrok);
+    }
   }, []);
 
   const fetchProjects = async () => {
@@ -275,8 +279,8 @@ export default function Home() {
         body: JSON.stringify({ projectId: currentProject.id, projectName: currentProject.name, pages }),
       });
       if (!response.ok) throw new Error("Erreur sauvegarde");
-      const apiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://norrigami.vercel.app/api/figjam-zoning`;
-      alert(`✓ Zoning prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Norrigami et renseigne :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`);
+      const apiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://kore.vercel.app/api/figjam-zoning`;
+      alert(`✓ Zoning prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Kore et renseigne :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur export FigJam");
     }
@@ -293,8 +297,8 @@ export default function Home() {
         body: JSON.stringify({ projectId: currentProject.id, projectName: currentProject.name, copyText: currentProject.copy }),
       });
       if (!response.ok) throw new Error("Erreur sauvegarde copy FigJam");
-      const apiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://norrigami.vercel.app/api/figjam-zoning`;
-      alert(`✓ Copy prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Norrigami et clique sur "Générer les wireframes copy" :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`);
+      const apiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://kore.vercel.app/api/figjam-zoning`;
+      alert(`✓ Copy prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Kore et clique sur "Générer les wireframes copy" :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur export copy FigJam");
     } finally {
@@ -376,8 +380,8 @@ export default function Home() {
 
   const renderMarkdown = (text: string) => {
     return text.split("\n").map((line, i) => {
-      if (line.startsWith("## ")) return <h2 key={i} className="text-xl font-semibold text-amber-400 mt-8 mb-3">{line.replace("## ", "")}</h2>;
-      if (line.startsWith("### ")) return <h3 key={i} className="text-base font-semibold text-amber-200 mt-5 mb-2">{line.replace("### ", "")}</h3>;
+      if (line.startsWith("## ")) return <h2 key={i} className="text-xl font-semibold text-[#c4b5e0] mt-8 mb-3">{line.replace("## ", "")}</h2>;
+      if (line.startsWith("### ")) return <h3 key={i} className="text-base font-semibold text-[#ddd4f0] mt-5 mb-2">{line.replace("### ", "")}</h3>;
       if (line.startsWith("- ")) return <li key={i} className="ml-4 text-zinc-300 text-sm list-disc">{line.slice(2)}</li>;
       if (line.startsWith("---")) return <hr key={i} className="border-zinc-800 my-4" />;
       if (line.match(/^\*\*.+\*\*$/)) return <p key={i} className="font-semibold text-zinc-200 mt-3">{line.replace(/\*\*/g, "")}</p>;
@@ -387,7 +391,7 @@ export default function Home() {
   };
 
   const canGenerate = brief.trim() || files.length > 0 || pdfUrl.trim();
-  const figJamApiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://norrigami.vercel.app/api/figjam-zoning`;
+  const figJamApiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://kore.vercel.app/api/figjam-zoning`;
 
   // ————————————————————————————
   // VUE ACCUEIL
@@ -397,21 +401,18 @@ export default function Home() {
       <main className="min-h-screen bg-zinc-950 text-zinc-100">
         <div className="border-b border-zinc-900 px-8 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-zinc-950 font-bold text-sm">N</div>
-            <div>
-              <div className="font-semibold text-sm">Norrigami</div>
-              <div className="text-xs text-zinc-600 uppercase tracking-widest">Zoning · Copywriting CRO/SEO</div>
-            </div>
+            <img src="/Group_2.svg" alt="Kore" className="h-8 w-auto" />
+            <div className="text-xs text-zinc-600 uppercase tracking-widest">Zoning · Copywriting CRO/SEO</div>
           </div>
           <div className="flex items-center gap-3">
             <input
               type="text"
               value={ngrokUrl}
-              onChange={(e) => { setNgrokUrl(e.target.value); localStorage.setItem("norrigami-ngrok", e.target.value); }}
+              onChange={(e) => { setNgrokUrl(e.target.value); localStorage.setItem("kore-ngrok", e.target.value); }}
               placeholder="URL ngrok (optionnel)"
-              className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 w-56"
+              className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 w-56"
             />
-            <button onClick={createProject} className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
+            <button onClick={createProject} className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
               + Nouveau projet
             </button>
           </div>
@@ -432,7 +433,7 @@ export default function Home() {
             <div className="text-center py-24 space-y-4">
               <div className="text-5xl">📁</div>
               <p className="text-zinc-500">Aucun projet pour l'instant</p>
-              <button onClick={createProject} className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold px-6 py-3 rounded-xl text-sm transition-colors cursor-pointer">
+              <button onClick={createProject} className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors cursor-pointer">
                 Créer mon premier projet
               </button>
             </div>
@@ -445,14 +446,14 @@ export default function Home() {
                   onClick={() => openProject(project)}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-amber-950/50 border border-amber-900/30 rounded-xl flex items-center justify-center text-amber-400 text-lg">
+                    <div className="w-10 h-10 bg-[#391754]/50 border border-[#391754]/30 rounded-xl flex items-center justify-center text-[#c4b5e0] text-lg">
                       {project.copy ? "✅" : project.zoning ? "🗂" : "📝"}
                     </div>
                     <div>
                       <div className="font-medium text-zinc-200">{project.name}</div>
                       <div className="text-xs text-zinc-600 mt-0.5 flex items-center gap-3">
                         <span>{new Date(project.createdAt).toLocaleDateString("fr-FR")}</span>
-                        {project.zoning && <span className="text-amber-600">Zoning ✓</span>}
+                        {project.zoning && <span className="text-[#8b6fa8]">Zoning ✓</span>}
                         {project.copy && <span className="text-green-600">Copy ✓</span>}
                         {project.miroUrl && <span className="text-blue-600">Miro ✓</span>}
                       </div>
@@ -480,9 +481,9 @@ export default function Home() {
         <div className="flex items-center gap-4">
           <button onClick={() => { setView("home"); fetchProjects(); }} className="text-zinc-600 hover:text-zinc-300 cursor-pointer text-sm">← Projets</button>
           <div className="w-px h-5 bg-zinc-800" />
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center text-zinc-950 font-bold text-sm">N</div>
-            <div className="font-semibold text-sm">{currentProject?.name || "Nouveau projet"}</div>
+          <div className="flex items-center gap-3 min-w-0">
+            <img src="/Group_2.svg" alt="Kore" className="h-8 w-auto shrink-0" />
+            <div className="font-semibold text-sm truncate">{currentProject?.name || "Nouveau projet"}</div>
           </div>
         </div>
 
@@ -498,8 +499,8 @@ export default function Home() {
             const isActive = step === s.key;
             return (
               <div key={s.key} className="flex items-center gap-2">
-                <div className={`flex items-center gap-2 text-xs ${isActive ? "text-amber-400" : isDone ? "text-zinc-400" : "text-zinc-600"}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${isDone ? "bg-amber-500 border-amber-500 text-zinc-950" : isActive ? "border-amber-500 text-amber-400" : "border-zinc-700 text-zinc-600"}`}>
+                <div className={`flex items-center gap-2 text-xs ${isActive ? "text-[#c4b5e0]" : isDone ? "text-zinc-400" : "text-zinc-600"}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${isDone ? "bg-gradient-to-br from-[#391754] to-[#220D31] border-[#391754] text-white" : isActive ? "border-[#391754] text-[#c4b5e0]" : "border-zinc-700 text-zinc-600"}`}>
                     {isDone ? "✓" : i + 1}
                   </div>
                   <span>{s.label}</span>
@@ -525,7 +526,7 @@ export default function Home() {
             {/* Toggle "J'ai déjà un zoning" */}
             <div
               onClick={() => setHasExistingZoning(!hasExistingZoning)}
-              className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors ${hasExistingZoning ? "bg-amber-950/20 border-amber-900/50" : "bg-zinc-900 border-zinc-800 hover:border-zinc-600"}`}
+              className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors ${hasExistingZoning ? "bg-[#220D31]/40 border-[#391754]/50" : "bg-zinc-900 border-zinc-800 hover:border-zinc-600"}`}
             >
               <div className="flex items-center gap-3">
                 <span className="text-lg">📄</span>
@@ -534,7 +535,7 @@ export default function Home() {
                   <div className="text-xs text-zinc-500">Importer un PDF de zoning existant et passer directement au copywriting</div>
                 </div>
               </div>
-              <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${hasExistingZoning ? "bg-amber-500" : "bg-zinc-700"}`}>
+              <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${hasExistingZoning ? "bg-gradient-to-r from-[#391754] to-[#220D31]" : "bg-zinc-700"}`}>
                 <div className={`w-4 h-4 rounded-full bg-white transition-transform ${hasExistingZoning ? "translate-x-4" : "translate-x-0"}`} />
               </div>
             </div>
@@ -543,14 +544,14 @@ export default function Home() {
               <div className="space-y-4">
                 <div
                   onClick={() => document.getElementById("zoning-pdf-input")?.click()}
-                  className="border-2 border-dashed border-amber-800/50 hover:border-amber-600/50 bg-amber-950/10 rounded-xl p-10 text-center cursor-pointer transition-colors"
+                  className="border-2 border-dashed border-[#391754]/50 hover:border-[#4a1f6a]/50 bg-[#220D31]/30 rounded-xl p-10 text-center cursor-pointer transition-colors"
                 >
                   <div className="text-3xl mb-3">📎</div>
                   <div className="text-zinc-400 text-sm">
                     {zoningPdf ? (
-                      <span className="text-amber-400 font-medium">📄 {zoningPdf.name}</span>
+                      <span className="text-[#c4b5e0] font-medium">📄 {zoningPdf.name}</span>
                     ) : (
-                      <>Glissez votre PDF de zoning ici ou <span className="text-amber-400 underline">parcourir</span></>
+                      <>Glissez votre PDF de zoning ici ou <span className="text-[#c4b5e0] underline">parcourir</span></>
                     )}
                   </div>
                   <div className="text-zinc-600 text-xs mt-1">PDF du zoning fourni par le client ou l'équipe</div>
@@ -563,7 +564,7 @@ export default function Home() {
                     <p className="text-zinc-400 text-sm">Import et reformatage du zoning...</p>
                     <div className="flex gap-2 justify-center">
                       {[0, 1, 2].map((i) => (
-                        <div key={i} className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                        <div key={i} className="w-2 h-2 bg-[#391754] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                       ))}
                     </div>
                   </div>
@@ -571,7 +572,7 @@ export default function Home() {
                   <button
                     onClick={handleImportZoning}
                     disabled={!zoningPdf}
-                    className="bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 font-semibold px-8 py-4 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed w-full"
+                    className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-8 py-4 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed w-full"
                   >
                     Importer le zoning et passer au copywriting →
                   </button>
@@ -581,22 +582,22 @@ export default function Home() {
               <>
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-widest text-zinc-500">Brief client</label>
-                  <textarea value={brief} onChange={(e) => setBrief(e.target.value)} placeholder="Secteur d'activité, cibles, objectifs, positionnement, pages souhaitées..." rows={6} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-colors" />
+                  <textarea value={brief} onChange={(e) => setBrief(e.target.value)} placeholder="Secteur d'activité, cibles, objectifs, positionnement, pages souhaitées..." rows={6} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-widest text-zinc-500">URL du site existant</label>
-                  <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://anciensite-client.fr" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors" />
+                  <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://anciensite-client.fr" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 transition-colors" />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-widest text-zinc-500">Notes d'entretien</label>
-                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes prises lors du rendez-vous client, verbatims, remarques..." rows={4} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-colors" />
+                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes prises lors du rendez-vous client, verbatims, remarques..." rows={4} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-widest text-zinc-500">Sprints</label>
-                  <textarea value={sprints} onChange={(e) => setSprints(e.target.value)} placeholder={"Sprint 1 : Accueil, Footer\nSprint 2 : Services, À propos\nSprint 3 : Cas clients, Contact"} rows={4} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-colors" />
+                  <textarea value={sprints} onChange={(e) => setSprints(e.target.value)} placeholder={"Sprint 1 : Accueil, Footer\nSprint 2 : Services, À propos\nSprint 3 : Cas clients, Contact"} rows={4} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
                   <p className="text-xs text-zinc-600">Indiquez les pages par sprint pour que FigJam/Miro les colorie par sprint.</p>
                 </div>
 
@@ -607,10 +608,10 @@ export default function Home() {
                     onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                     onDragLeave={() => setDragging(false)}
                     onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
-                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${dragging ? "border-amber-500/50 bg-amber-500/5" : "border-zinc-800 hover:border-zinc-600"}`}
+                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${dragging ? "border-[#391754]/50 bg-[#391754]/10" : "border-zinc-800 hover:border-zinc-600"}`}
                   >
                     <div className="text-2xl mb-2">📎</div>
-                    <div className="text-zinc-500 text-sm">Glissez vos PDFs ici ou <span className="text-amber-400 underline">parcourir</span></div>
+                    <div className="text-zinc-500 text-sm">Glissez vos PDFs ici ou <span className="text-[#c4b5e0] underline">parcourir</span></div>
                     <div className="text-zinc-700 text-xs mt-1">Plaquettes, decks, briefs, présentations...</div>
                   </div>
                   <input id="file-input" type="file" multiple accept=".pdf" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
@@ -618,7 +619,7 @@ export default function Home() {
                   {files.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {files.map((f, i) => (
-                        <div key={i} className="flex items-center gap-2 bg-amber-950/30 border border-amber-900/30 rounded-lg px-3 py-1.5 text-xs text-amber-400">
+                        <div key={i} className="flex items-center gap-2 bg-[#391754]/35 border border-[#391754]/30 rounded-lg px-3 py-1.5 text-xs text-[#c4b5e0]">
                           📄 {f.name}
                           <button onClick={() => removeFile(i)} className="text-zinc-600 hover:text-zinc-400 cursor-pointer">✕</button>
                         </div>
@@ -628,7 +629,7 @@ export default function Home() {
 
                   <div className="space-y-2">
                     <label className="text-xs text-zinc-600">Ou coller l'URL d'un PDF en ligne</label>
-                    <input type="url" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} placeholder="https://exemple.fr/plaquette.pdf" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors" />
+                    <input type="url" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} placeholder="https://exemple.fr/plaquette.pdf" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 transition-colors" />
                   </div>
                 </div>
 
@@ -641,12 +642,12 @@ export default function Home() {
                     </div>
                     <div className="flex gap-2 justify-center">
                       {[0, 1, 2].map((i) => (
-                        <div key={i} className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                        <div key={i} className="w-2 h-2 bg-[#391754] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <button onClick={handleGenerateZoning} disabled={!canGenerate} className="bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 font-semibold px-8 py-4 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
+                  <button onClick={handleGenerateZoning} disabled={!canGenerate} className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-8 py-4 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
                     Générer le zoning →
                   </button>
                 )}
@@ -708,7 +709,7 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder={`Ex: "Ajoute une page Témoignages" ou "Le sprint 2 doit inclure la page Contact"`} rows={3} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-colors" />
+                  <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder={`Ex: "Ajoute une page Témoignages" ou "Le sprint 2 doit inclure la page Contact"`} rows={3} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
                   <button onClick={() => { setFeedbackTarget("zoning"); handleFeedback(); }} disabled={!feedback.trim()} className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
                     Envoyer la correction →
                   </button>
@@ -716,12 +717,12 @@ export default function Home() {
               )}
             </div>
 
-            <div className="bg-amber-950/20 border border-amber-900/30 rounded-xl p-5 flex items-center justify-between gap-4">
+            <div className="bg-[#220D31]/40 border border-[#391754]/30 rounded-xl p-5 flex items-center justify-between gap-4">
               <div>
-                <div className="text-amber-400 text-sm font-semibold">Zoning validé ?</div>
+                <div className="text-[#c4b5e0] text-sm font-semibold">Zoning validé ?</div>
                 <div className="text-zinc-500 text-xs mt-1">Passez au brief copywriting pour générer les textes.</div>
               </div>
-              <button onClick={() => setStep("copy-brief")} className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold px-6 py-3 rounded-xl text-sm transition-colors cursor-pointer whitespace-nowrap">
+              <button onClick={() => setStep("copy-brief")} className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors cursor-pointer whitespace-nowrap">
                 Brief copywriting →
               </button>
             </div>
@@ -738,13 +739,13 @@ export default function Home() {
 
             <div className="space-y-3">
               <label className="text-xs uppercase tracking-widest text-zinc-500">Brief copywriting</label>
-              <textarea value={copyBrief} onChange={(e) => setCopyBrief(e.target.value)} placeholder="Collez ici votre brief copywriting : angle éditorial, ton, cibles, messages clés, éléments de différenciation..." rows={8} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-colors" />
+              <textarea value={copyBrief} onChange={(e) => setCopyBrief(e.target.value)} placeholder="Collez ici votre brief copywriting : angle éditorial, ton, cibles, messages clés, éléments de différenciation..." rows={8} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
               <div onClick={() => document.getElementById("copy-brief-file")?.click()} className="border-2 border-dashed border-zinc-800 hover:border-zinc-600 rounded-xl p-5 text-center cursor-pointer transition-colors">
-                <div className="text-zinc-500 text-sm">📎 Ou uploader le brief en <span className="text-amber-400 underline">PDF</span></div>
+                <div className="text-zinc-500 text-sm">📎 Ou uploader le brief en <span className="text-[#c4b5e0] underline">PDF</span></div>
               </div>
               <input id="copy-brief-file" type="file" accept=".pdf" onChange={(e) => setCopyBriefFile(e.target.files?.[0] || null)} className="hidden" />
               {copyBriefFile && (
-                <div className="flex items-center gap-2 bg-amber-950/30 border border-amber-900/30 rounded-lg px-3 py-1.5 text-xs text-amber-400 w-fit">
+                <div className="flex items-center gap-2 bg-[#391754]/35 border border-[#391754]/30 rounded-lg px-3 py-1.5 text-xs text-[#c4b5e0] w-fit">
                   📄 {copyBriefFile.name}
                   <button onClick={() => setCopyBriefFile(null)} className="text-zinc-600 hover:text-zinc-400 cursor-pointer">✕</button>
                 </div>
@@ -753,13 +754,13 @@ export default function Home() {
 
             <div className="space-y-3">
               <label className="text-xs uppercase tracking-widest text-zinc-500">Mots-clés SEO</label>
-              <textarea value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="Collez ici vos mots-clés SEO, un par ligne ou séparés par des virgules..." rows={5} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-colors" />
+              <textarea value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="Collez ici vos mots-clés SEO, un par ligne ou séparés par des virgules..." rows={5} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
               <div onClick={() => document.getElementById("keywords-file")?.click()} className="border-2 border-dashed border-zinc-800 hover:border-zinc-600 rounded-xl p-5 text-center cursor-pointer transition-colors">
-                <div className="text-zinc-500 text-sm">📎 Ou uploader les mots-clés en <span className="text-amber-400 underline">CSV</span></div>
+                <div className="text-zinc-500 text-sm">📎 Ou uploader les mots-clés en <span className="text-[#c4b5e0] underline">CSV</span></div>
               </div>
               <input id="keywords-file" type="file" accept=".csv" onChange={(e) => setKeywordsFile(e.target.files?.[0] || null)} className="hidden" />
               {keywordsFile && (
-                <div className="flex items-center gap-2 bg-amber-950/30 border border-amber-900/30 rounded-lg px-3 py-1.5 text-xs text-amber-400 w-fit">
+                <div className="flex items-center gap-2 bg-[#391754]/35 border border-[#391754]/30 rounded-lg px-3 py-1.5 text-xs text-[#c4b5e0] w-fit">
                   📊 {keywordsFile.name}
                   <button onClick={() => setKeywordsFile(null)} className="text-zinc-600 hover:text-zinc-400 cursor-pointer">✕</button>
                 </div>
@@ -776,12 +777,12 @@ export default function Home() {
                   <p className="text-zinc-400 text-sm">Génération du copywriting en cours...</p>
                   <div className="flex gap-2 justify-center">
                     {[0, 1, 2].map((i) => (
-                      <div key={i} className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                      <div key={i} className="w-2 h-2 bg-[#391754] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                     ))}
                   </div>
                 </div>
               ) : (
-                <button onClick={handleGenerateCopy} disabled={!copyBrief.trim() && !copyBriefFile} className="flex-1 bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 font-semibold px-8 py-3 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
+                <button onClick={handleGenerateCopy} disabled={!copyBrief.trim() && !copyBriefFile} className="flex-1 bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-8 py-3 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
                   Générer le copywriting →
                 </button>
               )}
@@ -828,7 +829,7 @@ export default function Home() {
 
             <div className="flex gap-1 bg-zinc-900 p-1 rounded-xl w-fit">
               {(["zoning", "copy"] as const).map((tab) => (
-                <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${activeTab === tab ? "bg-zinc-800 text-amber-400" : "text-zinc-500 hover:text-zinc-300"}`}>
+                <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${activeTab === tab ? "bg-zinc-800 text-[#c4b5e0]" : "text-zinc-500 hover:text-zinc-300"}`}>
                   {tab === "zoning" ? "🗂 Zoning" : "✍️ Copywriting"}
                 </button>
               ))}
@@ -850,7 +851,7 @@ export default function Home() {
               </div>
               <div className="flex gap-2">
                 {(["zoning", "copy"] as const).map((t) => (
-                  <button key={t} onClick={() => setFeedbackTarget(t)} className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${feedbackTarget === t ? "border-amber-500/50 bg-amber-950/30 text-amber-400" : "border-zinc-800 text-zinc-500 hover:text-zinc-300"}`}>
+                  <button key={t} onClick={() => setFeedbackTarget(t)} className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${feedbackTarget === t ? "border-[#391754]/50 bg-[#391754]/35 text-[#c4b5e0]" : "border-zinc-800 text-zinc-500 hover:text-zinc-300"}`}>
                     {t === "zoning" ? "🗂 Corriger le zoning" : "✍️ Corriger le copywriting"}
                   </button>
                 ))}
@@ -862,7 +863,7 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder={`Ex: "Le ton est trop formel" ou "Ajoute une page Témoignages"`} rows={3} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 resize-none transition-colors" />
+                  <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder={`Ex: "Le ton est trop formel" ou "Ajoute une page Témoignages"`} rows={3} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
                   <button onClick={handleFeedback} disabled={!feedback.trim()} className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
                     Envoyer la correction →
                   </button>

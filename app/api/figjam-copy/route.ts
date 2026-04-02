@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
   if (error || !data || !data.copy_text) {
     return NextResponse.json(
-      { error: "Copy introuvable — clique d'abord sur Wireframes FigJam dans Norrigami" },
+      { error: "Copy introuvable — clique d'abord sur Wireframes FigJam dans Kore" },
       { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
     );
   }
