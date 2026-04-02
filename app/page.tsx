@@ -21,6 +21,24 @@ interface Project {
 type View = "home" | "project";
 type ProjectStep = "brief" | "zoning" | "copy-brief" | "copy";
 
+function extractPages(zoning: string): { name: string; content: string }[] {
+  const pages: { name: string; content: string }[] = [];
+  const lines = zoning.split("\n");
+  let currentPage: { name: string; content: string } | null = null;
+  for (const line of lines) {
+    const pageMatch = line.match(/^#{1,2}\s+(.+)/) || line.match(/^Page\s*:\s*(.+)/i) || line.match(/^-+\s*(.+)\s*-+/);
+    if (pageMatch) {
+      if (currentPage) pages.push(currentPage);
+      currentPage = { name: pageMatch[1].trim(), content: line + "\n" };
+    } else if (currentPage) {
+      currentPage.content += line + "\n";
+    }
+  }
+  if (currentPage) pages.push(currentPage);
+  if (pages.length === 0) pages.push({ name: "Site complet", content: zoning });
+  return pages;
+}
+
 export default function Home() {
   const [view, setView] = useState<View>("home");
   const [projects, setProjects] = useState<Project[]>([]);
@@ -306,86 +324,42 @@ export default function Home() {
     }
   };
 
-  // Remplace la fonction handleGenerateCopy existante dans page.tsx
-
-const handleGenerateCopy = async () => {
-  if (!currentProject?.zoning) return;
-  setLoadingCopy(true);
-  setError(null);
-
-  // Initialise le copy à vide pour afficher le stream en temps réel
-  await updateProject({ copy: "" });
-  setStep("copy");
-  setActiveTab("copy");
-
-  try {
-    const formData = new FormData();
-    formData.append("zoning", currentProject.zoning);
-    formData.append("brief", brief);
-    formData.append("url", url);
-    formData.append("notes", notes);
-    formData.append("copyBrief", copyBrief);
-    formData.append("keywords", keywords);
-    if (copyBriefFile) formData.append("copyBriefFile", copyBriefFile);
-    if (keywordsFile) formData.append("keywordsFile", keywordsFile);
-
-    const response = await fetch("/api/generate-copy", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error || "Erreur serveur");
-    }
-
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
-    if (!reader) throw new Error("Stream non disponible");
-
-    let fullCopy = "";
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n\n");
-      buffer = lines.pop() || "";
-
-      for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        try {
-          const json = JSON.parse(line.slice(6));
-
-          if (json.error) throw new Error(json.error);
-
-          if (json.done) {
-            // Sauvegarde finale
-            await updateProject({ copy: fullCopy, copyBrief, keywords });
-            break;
-          }
-
-          if (json.chunk) {
-            fullCopy += json.chunk;
-            // Met à jour l'affichage en temps réel sans sauvegarder à chaque chunk
-            setCurrentProject((prev) => prev ? { ...prev, copy: fullCopy } : prev);
-          }
-        } catch (e) {
-          if (e instanceof Error && e.message !== "Unexpected end of JSON input") {
-            throw e;
-          }
-        }
+  const handleGenerateCopy = async () => {
+    if (!currentProject?.zoning) return;
+    setLoadingCopy(true);
+    setError(null);
+    try {
+      const pages = extractPages(currentProject.zoning);
+      let context = "Voici les informations pour générer le copywriting :\n\n";
+      if (brief) context += `### Brief client\n${brief}\n\n`;
+      if (url) context += `### URL du site existant\n${url}\n\n`;
+      if (notes) context += `### Notes d'entretien\n${notes}\n\n`;
+      if (copyBrief) context += `### Brief copywriting\n${copyBrief}\n\n`;
+      if (keywords) context += `### Mots-clés SEO\n${keywords}\n\n`;
+      let fullCopy = "";
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        const formData = new FormData();
+        formData.append("pageName", page.name);
+        formData.append("pageContent", page.content);
+        formData.append("context", context);
+        if (copyBriefFile) formData.append("copyBriefFile", copyBriefFile);
+        const response = await fetch("/api/generate-copy", { method: "POST", body: formData });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Erreur serveur");
+        fullCopy += (fullCopy ? "\n\n" : "") + data.copy;
+        const copySnapshot = fullCopy;
+        setCurrentProject((prev) => prev ? { ...prev, copy: copySnapshot } : prev);
+        if (i === 0) { setStep("copy"); setActiveTab("copy"); }
       }
+      await updateProject({ copy: fullCopy, copyBrief, keywords });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      setStep("copy-brief");
+    } finally {
+      setLoadingCopy(false);
     }
-  } catch (err: unknown) {
-    setError(err instanceof Error ? err.message : "Erreur inconnue");
-    setStep("copy-brief");
-  } finally {
-    setLoadingCopy(false);
-  }
-};
+  };
 
   const handleExportCopyToMiro = async () => {
     if (!currentProject?.copy || !currentProject?.miroBoardId) return;
