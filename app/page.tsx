@@ -85,6 +85,10 @@ export default function Home() {
   // Active tab
   const [activeTab, setActiveTab] = useState<"zoning" | "copy">("zoning");
 
+  const [copyPages, setCopyPages] = useState<{ name: string; content: string }[]>([]);
+  const [activeCopyPage, setActiveCopyPage] = useState<string>("");
+  const [generatingPageIndex, setGeneratingPageIndex] = useState<number>(-1);
+
   useEffect(() => {
     fetchProjects();
     const savedNgrok =
@@ -328,34 +332,57 @@ export default function Home() {
     if (!currentProject?.zoning) return;
     setLoadingCopy(true);
     setError(null);
+
+    const pages = extractPages(currentProject.zoning);
+
+    const initialCopyPages = pages.map((p) => ({ name: p.name, content: "" }));
+    setCopyPages(initialCopyPages);
+    setActiveCopyPage(pages[0].name);
+    setGeneratingPageIndex(0);
+    setStep("copy");
+    setActiveTab("copy");
+
+    let context = "Voici les informations pour générer le copywriting :\n\n";
+    if (brief) context += `### Brief client\n${brief}\n\n`;
+    if (url) context += `### URL du site existant\n${url}\n\n`;
+    if (notes) context += `### Notes d'entretien\n${notes}\n\n`;
+    if (copyBrief) context += `### Brief copywriting\n${copyBrief}\n\n`;
+    if (keywords) context += `### Mots-clés SEO\n${keywords}\n\n`;
+
     try {
-      const pages = extractPages(currentProject.zoning);
-      let context = "Voici les informations pour générer le copywriting :\n\n";
-      if (brief) context += `### Brief client\n${brief}\n\n`;
-      if (url) context += `### URL du site existant\n${url}\n\n`;
-      if (notes) context += `### Notes d'entretien\n${notes}\n\n`;
-      if (copyBrief) context += `### Brief copywriting\n${copyBrief}\n\n`;
-      if (keywords) context += `### Mots-clés SEO\n${keywords}\n\n`;
-      let fullCopy = "";
+      const results: { name: string; content: string }[] = [...initialCopyPages];
+
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
+        setGeneratingPageIndex(i);
+        setActiveCopyPage(page.name);
+
         const formData = new FormData();
         formData.append("pageName", page.name);
         formData.append("pageContent", page.content);
         formData.append("context", context);
         if (copyBriefFile) formData.append("copyBriefFile", copyBriefFile);
-        const response = await fetch("/api/generate-copy", { method: "POST", body: formData });
+
+        const response = await fetch("/api/generate-copy", {
+          method: "POST",
+          body: formData,
+        });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Erreur serveur");
-        fullCopy += (fullCopy ? "\n\n" : "") + data.copy;
-        const copySnapshot = fullCopy;
-        setCurrentProject((prev) => prev ? { ...prev, copy: copySnapshot } : prev);
-        if (i === 0) { setStep("copy"); setActiveTab("copy"); }
+
+        results[i] = { name: page.name, content: data.copy };
+        setCopyPages([...results]);
       }
+
+      setGeneratingPageIndex(-1);
+
+      const fullCopy = results.map((p) => p.content).join("\n\n");
       await updateProject({ copy: fullCopy, copyBrief, keywords });
+      setCurrentProject((prev) => (prev ? { ...prev, copy: fullCopy } : prev));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
       setStep("copy-brief");
+      setGeneratingPageIndex(-1);
     } finally {
       setLoadingCopy(false);
     }
@@ -819,12 +846,16 @@ export default function Home() {
         )}
 
         {/* ———— ÉTAPE 4 : COPYWRITING ———— */}
-        {step === "copy" && currentProject?.copy && (
+        {step === "copy" && (copyPages.length > 0 || currentProject?.copy) && (
           <div className="space-y-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <h1 className="text-2xl font-semibold">Livrables complets</h1>
-                <p className="text-zinc-500 text-sm mt-1">Zoning et copywriting prêts.</p>
+                <p className="text-zinc-500 text-sm mt-1">
+                  {loadingCopy
+                    ? `Génération en cours... (${copyPages.filter((p) => p.content).length}/${copyPages.length} pages)`
+                    : "Zoning et copywriting prêts."}
+                </p>
               </div>
               <div className="flex gap-3 flex-wrap">
                 <button
@@ -833,71 +864,166 @@ export default function Home() {
                 >
                   🔄 Regénérer le copy
                 </button>
-                <button onClick={() => navigator.clipboard.writeText((currentProject.zoning || "") + "\n\n" + (currentProject.copy || ""))} className="border border-zinc-800 hover:border-zinc-600 px-4 py-2 rounded-lg text-xs text-zinc-400 transition-colors cursor-pointer">
-                  📋 Copier tout
-                </button>
-                {currentProject.miroUrl && (
-                  <a href={currentProject.miroUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 border border-blue-800 text-blue-400 px-4 py-2 rounded-lg text-xs hover:bg-blue-950/30 transition-colors">
-                    🟦 Ouvrir Miro →
-                  </a>
+                {!loadingCopy && (
+                  <>
+                    <button
+                      onClick={() => navigator.clipboard.writeText((currentProject?.zoning || "") + "\n\n" + (currentProject?.copy || ""))}
+                      className="border border-zinc-800 hover:border-zinc-600 px-4 py-2 rounded-lg text-xs text-zinc-400 transition-colors cursor-pointer"
+                    >
+                      📋 Copier tout
+                    </button>
+                    {currentProject?.miroUrl && (
+                      <a href={currentProject.miroUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 border border-blue-800 text-blue-400 px-4 py-2 rounded-lg text-xs hover:bg-blue-950/30 transition-colors">
+                        🟦 Ouvrir Miro →
+                      </a>
+                    )}
+                    {currentProject?.miroBoardId && (
+                      <button onClick={handleExportCopyToMiro} disabled={loadingMiroCopy} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed">
+                        {loadingMiroCopy ? "Export..." : "🟦 Wireframes Miro"}
+                      </button>
+                    )}
+                    <button onClick={handleExportFigJam} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer">
+                      🎨 Zoning FigJam
+                    </button>
+                    <button onClick={handleExportCopyToFigJam} disabled={loadingFigJamCopy} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed">
+                      {loadingFigJamCopy ? "Export..." : "✍️ Wireframes FigJam"}
+                    </button>
+                  </>
                 )}
-                {currentProject.miroBoardId && (
-                  <button onClick={handleExportCopyToMiro} disabled={loadingMiroCopy} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed">
-                    {loadingMiroCopy ? "Export..." : "🟦 Wireframes Miro"}
-                  </button>
-                )}
-                <button onClick={handleExportFigJam} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer">
-                  🎨 Zoning FigJam
-                </button>
-                <button onClick={handleExportCopyToFigJam} disabled={loadingFigJamCopy} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed">
-                  {loadingFigJamCopy ? "Export..." : "✍️ Wireframes FigJam"}
-                </button>
               </div>
             </div>
 
             <div className="flex gap-1 bg-zinc-900 p-1 rounded-xl w-fit">
               {(["zoning", "copy"] as const).map((tab) => (
-                <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${activeTab === tab ? "bg-zinc-800 text-[#c4b5e0]" : "text-zinc-500 hover:text-zinc-300"}`}>
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${activeTab === tab ? "bg-zinc-800 text-[#c4b5e0]" : "text-zinc-500 hover:text-zinc-300"}`}
+                >
                   {tab === "zoning" ? "🗂 Zoning" : "✍️ Copywriting"}
                 </button>
               ))}
             </div>
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
-              <div className="flex justify-end mb-4">
-                <button onClick={() => navigator.clipboard.writeText(activeTab === "zoning" ? (currentProject.zoning || "") : (currentProject.copy || ""))} className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
-                  📋 Copier
-                </button>
+            {activeTab === "copy" && copyPages.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {copyPages.map((page, i) => {
+                  const isGenerating = generatingPageIndex === i;
+                  const isDone = page.content !== "";
+                  const isActive = activeCopyPage === page.name;
+                  return (
+                    <button
+                      key={page.name}
+                      type="button"
+                      onClick={() => isDone && setActiveCopyPage(page.name)}
+                      disabled={!isDone}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors
+                ${isActive && isDone ? "bg-[#391754]/40 border-[#391754]/60 text-[#c4b5e0]" : ""}
+                ${!isActive && isDone ? "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600 cursor-pointer" : ""}
+                ${isGenerating ? "bg-zinc-900 border-[#391754]/40 text-zinc-400 cursor-wait" : ""}
+                ${!isDone && !isGenerating ? "bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed opacity-50" : ""}
+              `}
+                    >
+                      {isGenerating && (
+                        <span className="w-2 h-2 rounded-full bg-[#391754] animate-pulse inline-block" />
+                      )}
+                      {isDone && !isGenerating && (
+                        <span className="text-green-500 text-xs">✓</span>
+                      )}
+                      {page.name}
+                    </button>
+                  );
+                })}
               </div>
-              <div>{renderMarkdown(activeTab === "zoning" ? (currentProject.zoning || "") : (currentProject.copy || ""))}</div>
-            </div>
+            )}
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">✏️</span>
-                <div className="text-sm font-semibold text-zinc-200">Demander une correction</div>
-              </div>
-              <div className="flex gap-2">
-                {(["zoning", "copy"] as const).map((t) => (
-                  <button key={t} onClick={() => setFeedbackTarget(t)} className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${feedbackTarget === t ? "border-[#391754]/50 bg-[#391754]/35 text-[#c4b5e0]" : "border-zinc-800 text-zinc-500 hover:text-zinc-300"}`}>
-                    {t === "zoning" ? "🗂 Corriger le zoning" : "✍️ Corriger le copywriting"}
-                  </button>
-                ))}
-              </div>
-              {feedbackLoading ? (
-                <div className="text-center py-4">
-                  <div className="text-2xl animate-pulse mb-2">✦</div>
-                  <p className="text-zinc-400 text-sm">Correction en cours...</p>
-                </div>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
+              {activeTab === "zoning" ? (
+                <>
+                  <div className="flex justify-end mb-4">
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(currentProject?.zoning || "")}
+                      className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      📋 Copier
+                    </button>
+                  </div>
+                  <div>{renderMarkdown(currentProject?.zoning || "")}</div>
+                </>
               ) : (
                 <>
-                  <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder={`Ex: "Le ton est trop formel" ou "Ajoute une page Témoignages"`} rows={3} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
-                  <button onClick={handleFeedback} disabled={!feedback.trim()} className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
-                    Envoyer la correction →
-                  </button>
+                  {copyPages.length > 0 ? (
+                    <>
+                      <div className="flex justify-end mb-4">
+                        <button
+                          type="button"
+                          onClick={() => navigator.clipboard.writeText(copyPages.find((p) => p.name === activeCopyPage)?.content || "")}
+                          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                        >
+                          📋 Copier cette page
+                        </button>
+                      </div>
+                      {copyPages.find((p) => p.name === activeCopyPage)?.content ? (
+                        <div>{renderMarkdown(copyPages.find((p) => p.name === activeCopyPage)?.content || "")}</div>
+                      ) : (
+                        <div className="text-center py-12 space-y-3">
+                          <div className="text-2xl animate-pulse">✦</div>
+                          <p className="text-zinc-500 text-sm">Génération en cours...</p>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div>{renderMarkdown(currentProject?.copy || "")}</div>
+                  )}
                 </>
               )}
             </div>
+
+            {!loadingCopy && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">✏️</span>
+                  <div className="text-sm font-semibold text-zinc-200">Demander une correction</div>
+                </div>
+                <div className="flex gap-2">
+                  {(["zoning", "copy"] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setFeedbackTarget(t)}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${feedbackTarget === t ? "border-[#391754]/50 bg-[#391754]/35 text-[#c4b5e0]" : "border-zinc-800 text-zinc-500 hover:text-zinc-300"}`}
+                    >
+                      {t === "zoning" ? "🗂 Corriger le zoning" : "✍️ Corriger le copywriting"}
+                    </button>
+                  ))}
+                </div>
+                {feedbackLoading ? (
+                  <div className="text-center py-4">
+                    <div className="text-2xl animate-pulse mb-2">✦</div>
+                    <p className="text-zinc-400 text-sm">Correction en cours...</p>
+                  </div>
+                ) : (
+                  <>
+                    <textarea
+                      value={feedback}
+                      onChange={(e) => setFeedback(e.target.value)}
+                      placeholder={`Ex: "Le ton est trop formel" ou "Ajoute une page Témoignages"`}
+                      rows={3}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleFeedback}
+                      disabled={!feedback.trim()}
+                      className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      Envoyer la correction →
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="bg-purple-950/20 border border-purple-900/30 rounded-xl p-4 flex items-start gap-3">
               <span className="text-lg">🎨</span>
@@ -905,7 +1031,7 @@ export default function Home() {
                 <div className="text-purple-400 text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
                 <div className="text-zinc-500 text-xs leading-relaxed">
                   URL : <span className="text-zinc-300 font-mono">{figJamApiUrl}</span><br />
-                  ID : <span className="text-zinc-300 font-mono">{currentProject.id}</span>
+                  ID : <span className="text-zinc-300 font-mono">{currentProject?.id}</span>
                 </div>
               </div>
             </div>
