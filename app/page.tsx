@@ -361,7 +361,6 @@ export default function Home() {
         formData.append("pageName", page.name);
         formData.append("pageContent", page.content);
         formData.append("context", context);
-        if (copyBriefFile) formData.append("copyBriefFile", copyBriefFile);
 
         const response = await fetch("/api/generate-copy", {
           method: "POST",
@@ -372,6 +371,11 @@ export default function Home() {
 
         results[i] = { name: page.name, content: data.copy };
         setCopyPages([...results]);
+
+        // Pause entre les pages pour éviter le rate limit
+        if (i < pages.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
       }
 
       setGeneratingPageIndex(-1);
