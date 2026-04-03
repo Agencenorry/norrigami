@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 export async function OPTIONS() {
   return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "*",
-    },
+    headers: corsHeaders,
   });
 }
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
   if (!projectId) {
     return NextResponse.json(
       { error: "projectId manquant" },
-      { status: 400, headers: { "Access-Control-Allow-Origin": "*" } }
+      { status: 400, headers: corsHeaders }
     );
   }
 
@@ -32,12 +33,9 @@ export async function GET(request: NextRequest) {
   if (error || !data || !data.copy_text) {
     return NextResponse.json(
       { error: "Copy introuvable — clique d'abord sur Wireframes FigJam dans Kore" },
-      { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
+      { status: 404, headers: corsHeaders }
     );
   }
 
-  return NextResponse.json(
-    { copyText: data.copy_text },
-    { headers: { "Access-Control-Allow-Origin": "*" } }
-  );
+  return NextResponse.json({ copyText: data.copy_text }, { headers: corsHeaders });
 }
