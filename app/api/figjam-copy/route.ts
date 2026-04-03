@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "*",
 };
 
 export async function OPTIONS() {
