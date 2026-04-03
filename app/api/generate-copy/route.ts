@@ -18,6 +18,8 @@ INTERDICTIONS STRICTES :
 - Jamais de nous centré : commencer par le client, pas par l'entreprise
 - Jamais de promesses non étayées par une preuve ou un mécanisme concret
 - Jamais de ton coaching américain agressif : "machine de guerre", "armée secrète", "cartonner"
+- Jamais de chiffres inventés ou estimés (%, statistiques, durées, montants) sauf s'ils sont explicitement mentionnés dans le brief ou le zoning
+- Le Sur-titre est OBLIGATOIRE sur chaque bloc sans exception, même navigation et footer. 2 à 3 mots max, jamais vide.
 
 EXIGENCES QUALITÉ :
 - Chaque titre doit exprimer une transformation concrète ou soulever une tension réelle chez le lecteur
