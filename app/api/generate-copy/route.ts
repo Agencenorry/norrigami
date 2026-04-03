@@ -11,7 +11,10 @@ Pour chaque page du zoning, génère le copywriting de chaque bloc dans l'ordre 
 
 Utilise ce format strict :
 
-## [Nom de la page]
+- **Pages** : une ligne de titre par page, préfixée exactement par \`## \` (deux dièses + espace).
+- **Blocs** : une ligne de titre par bloc, préfixée exactement par \`### \` (trois dièses + espace).
+
+## [NOM DE LA PAGE EN MAJUSCULES]
 
 ### [Nom du bloc]
 [Copywriting du bloc structuré selon les règles ci-dessous]
@@ -37,6 +40,7 @@ Chaque section doit contenir dans l'ordre, selon sa pertinence :
 RÈGLES GÉNÉRALES
 ═══════════════════════════════════════
 - Respecte EXACTEMENT l'ordre des blocs du zoning
+- OBLIGATOIRE : chaque page commence par \`## NOM PAGE\` et chaque bloc par \`### Nom du bloc\`
 - Utilise les préfixes sur des lignes séparées
 - Intègre naturellement les mots-clés SEO
 - Pas d'anglicismes, tout en français
