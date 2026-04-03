@@ -387,6 +387,7 @@ export default function Home() {
         formData.append("pageName", page.name);
         formData.append("pageContent", page.content);
         formData.append("context", context);
+        if (currentProject.zoning) formData.append("fullZoning", currentProject.zoning);
 
         const response = await fetch("/api/generate-copy", {
           method: "POST",

@@ -3,49 +3,36 @@ import { NextRequest, NextResponse } from "next/server";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_COPY = `Tu es un expert en copywriting CRO, SEO et GEO (Generative Engine Optimization). Tu travailles pour une agence de création et refonte de sites web. Tu génères du copywriting structuré, orienté conversion, optimisé pour le référencement naturel et les moteurs IA.
-
-À partir du zoning validé et du brief copywriting fournis, génère le copywriting complet du site.
-
-Pour chaque page du zoning, génère le copywriting de chaque bloc dans l'ordre exact du zoning.
-
-Utilise ce format strict :
-
-- **Pages** : une ligne de titre par page, préfixée exactement par \`## \` (deux dièses + espace).
-- **Blocs** : une ligne de titre par bloc, préfixée exactement par \`### \` (trois dièses + espace).
-
-## [NOM DE LA PAGE EN MAJUSCULES]
-
-### [Nom du bloc]
-[Copywriting du bloc structuré selon les règles ci-dessous]
-
----
+const SYSTEM_COPY = `Tu es un copywriter stratégique senior spécialisé en B2B. Tu rédiges des contenus de site web qui convertissent sans jamais sonner creux, agressif ou générique.
 
 ═══════════════════════════════════════
-STRUCTURE TYPE DE CHAQUE SECTION
+RÈGLES ABSOLUES — NE JAMAIS ENFREINDRE
 ═══════════════════════════════════════
 
-Chaque section doit contenir dans l'ordre, selon sa pertinence :
+INTERDICTIONS STRICTES :
+- Jamais de majuscules criées (STOP !, MAINTENANT, URGENT, RÉVOLUTIONNAIRE)
+- Jamais d'emojis sauf si le brief le demande explicitement
+- Jamais de superlatifs vides : "expert", "passionné", "unique", "innovant", "sur-mesure", "solution", "accompagnement", "synergies", "valeur ajoutée"
+- Jamais de formules creuses : "dans un monde où...", "plus que jamais...", "à l'heure du digital..."
+- Jamais de fausse urgence : "plus que X places", "offre limitée", "réservez maintenant"
+- Jamais de nous centré : commencer par le client, pas par l'entreprise
+- Jamais de promesses non étayées par une preuve ou un mécanisme concret
+- Jamais de ton coaching américain agressif : "machine de guerre", "armée secrète", "cartonner"
 
-1. **Sur-titre** — 2 à 3 mots max. Préfixe avec "Sur-titre : "
-2. **Titre principal** — 1 à 2 lignes, accrocheur, orienté bénéfice client. Préfixe avec "Titre : "
-3. **Sous-titre / chapeau** — 2 à 3 phrases. Préfixe avec "Sous-titre : "
-4. **Contenu principal** — Variable selon la section. Préfixe avec "Contenu : "
-5. **Éléments de preuve** (si pertinent). Préfixe avec "Preuves : "
-6. **CTA principal** — Préfixe avec "CTA : "
-7. **CTA secondaire** (si pertinent) — Préfixe avec "CTA secondaire : "
-8. **Arguments de réassurance** (si pertinent) — Préfixe avec "Réassurance : "
+EXIGENCES QUALITÉ :
+- Chaque titre doit exprimer une transformation concrète ou soulever une tension réelle chez le lecteur
+- Chaque sous-titre doit répondre à "pourquoi maintenant" ou "pourquoi eux"
+- Chaque contenu doit contenir au moins un élément de preuve, de mécanisme ou d'exemple concret
+- Les CTAs doivent être orientés bénéfice, pas action : "Voir comment ça fonctionne" pas "Cliquez ici"
+- Le ton doit être celui d'un expert qui parle à un pair, pas d'un commercial qui pitch
+- Respecter scrupuleusement le tone of voice défini dans le brief
 
-═══════════════════════════════════════
-RÈGLES GÉNÉRALES
-═══════════════════════════════════════
-- Respecte EXACTEMENT l'ordre des blocs du zoning
-- OBLIGATOIRE : chaque page commence par \`## NOM PAGE\` et chaque bloc par \`### Nom du bloc\`
-- Utilise les préfixes sur des lignes séparées
-- Intègre naturellement les mots-clés SEO
-- Pas d'anglicismes, tout en français
-- Ton orienté bénéfice client
-- Pas de texte lorem ipsum`;
+FORMAT OBLIGATOIRE :
+- Pages : ## NOM DE LA PAGE
+- Blocs : ### Nom du bloc
+- Préfixes sur lignes séparées : Sur-titre :, Titre :, Sous-titre :, Contenu :, Preuves :, CTA :, CTA secondaire :, Réassurance :
+- Tout en français, pas d'anglicismes
+- Respecter EXACTEMENT l'ordre des blocs du zoning`;
 
 export const maxDuration = 60;
 
@@ -56,6 +43,7 @@ export async function POST(request: NextRequest) {
     const pageName = formData.get("pageName") as string;
     const pageContent = formData.get("pageContent") as string;
     const context = formData.get("context") as string;
+    const fullZoning = (formData.get("fullZoning") as string | null) ?? "";
     const copyBriefFile = formData.get("copyBriefFile") as File | null;
 
     let pdfBlock: Anthropic.DocumentBlockParam | null = null;
@@ -71,7 +59,33 @@ export async function POST(request: NextRequest) {
     const userContent: Anthropic.MessageParam["content"] = [];
     if (pdfBlock) userContent.push(pdfBlock);
 
-    const prompt = `${context}\n\n### Zoning de la page à traiter\n${pageContent}\n\nGénère UNIQUEMENT le copywriting pour cette page "${pageName}". Respecte exactement la structure du zoning.`;
+    const zoningGlobal =
+      fullZoning.trim() !== ""
+        ? `### Zoning complet du site (contexte global)\n${fullZoning}\n\n`
+        : "";
+    const prompt = `
+${zoningGlobal}${context}
+
+### Page à rédiger : "${pageName}"
+${pageContent}
+
+═══════════════════════════════════════
+INSTRUCTIONS CRITIQUES
+═══════════════════════════════════════
+
+1. Le brief fourni (PDF ou texte) est ta BIBLE. Chaque phrase doit en découler directement.
+   - Respecte scrupuleusement le tone of voice défini
+   - Utilise uniquement le vocabulaire autorisé
+   - Bannis tout ce qui est listé comme "à éviter"
+   - Adresse les objections et personas décrits
+   - Reflète le positionnement exact, pas un positionnement générique
+
+2. Le zoning de cette page définit la STRUCTURE. Génère un bloc pour chaque section listée, dans l'ordre exact.
+
+3. La cohérence avec les autres pages du site doit être maintenue — même ton, même univers, mêmes éléments de preuve.
+
+4. Génère UNIQUEMENT le copywriting pour la page "${pageName}".
+`;
     userContent.push({ type: "text", text: prompt });
 
     const msg = await client.messages.create({
