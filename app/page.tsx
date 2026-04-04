@@ -473,8 +473,7 @@ export default function Home() {
       if (line.startsWith("---")) return <hr key={i} className="border-zinc-800 my-4" />;
       if (line.match(/^\*\*.+\*\*$/)) return <p key={i} className="font-semibold text-zinc-200 mt-3">{line.replace(/\*\*/g, "")}</p>;
       if (line.trim() === "") return <div key={i} className="h-2" />;
-      line = line.replace(/\*\*/g, "");
-      return <p key={i} className="text-zinc-400 text-sm leading-relaxed">{line}</p>;
+      return <p key={i} className="text-zinc-400 text-sm leading-relaxed">{line.replace(/\*\*/g, "")}</p>;
     });
   };
 
