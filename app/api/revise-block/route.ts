@@ -34,7 +34,7 @@ Contexte :
 - Page : ${pageLabel}
 - Bloc : ${blockLabel}
 - Contenu actuel :
-${blockContent}
+${String(blockContent ?? "").replace(/\*\*/g, "")}
 
 Réponds TOUJOURS en JSON valide :
 - Si tu révises : {"revised": "...", "message": "..."}
