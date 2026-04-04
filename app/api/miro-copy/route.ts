@@ -90,7 +90,7 @@ function findCopyForSection(
 ): Record<string, string> {
   const zPage = zoningPages[pageIdx];
   const nkPage = normKey(zPage.cleanLabel);
-  let copyPage =
+  const copyPage =
     copyPages.find((p) => normKey(cleanLabel(p.label)) === nkPage) ||
     copyPages.find(
       (p) =>
@@ -289,7 +289,6 @@ export async function POST(request: NextRequest) {
     const totalSecondaryWidth = secondaryPages.length * (CARD_WIDTH + CARD_GAP) - CARD_GAP;
     const mainX = Math.max(totalSecondaryWidth / 2, CARD_WIDTH / 2) + shift;
     const mainCardHeight = cardHeightForPage(mainPage, copyPages, zoningPages, 0);
-    const mainY = mainCardHeight / 2 + 40;
 
     await miroRequest("POST", `/boards/${boardId}/shapes`, {
       data: {

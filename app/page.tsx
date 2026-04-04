@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 
 interface Project {
@@ -487,7 +488,7 @@ export default function Home() {
       <main className="min-h-screen bg-zinc-950 text-zinc-100">
         <div className="border-b border-zinc-900 px-8 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/Group_2.svg" alt="Kore" className="h-8 w-auto" />
+            <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto" unoptimized />
             <div className="text-xs text-zinc-600 uppercase tracking-widest">Zoning · Copywriting CRO/SEO</div>
           </div>
           <div className="flex items-center gap-3">
@@ -518,7 +519,7 @@ export default function Home() {
           ) : projects.length === 0 ? (
             <div className="text-center py-24 space-y-4">
               <div className="text-5xl">📁</div>
-              <p className="text-zinc-500">Aucun projet pour l'instant</p>
+              <p className="text-zinc-500">Aucun projet pour l&apos;instant</p>
               <button onClick={createProject} className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors cursor-pointer">
                 Créer mon premier projet
               </button>
@@ -568,7 +569,7 @@ export default function Home() {
           <button onClick={() => { setView("home"); fetchProjects(); }} className="text-zinc-600 hover:text-zinc-300 cursor-pointer text-sm">← Projets</button>
           <div className="w-px h-5 bg-zinc-800" />
           <div className="flex items-center gap-3 min-w-0">
-            <img src="/Group_2.svg" alt="Kore" className="h-8 w-auto shrink-0" />
+            <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto shrink-0" unoptimized />
             <div className="font-semibold text-sm truncate">{currentProject?.name || "Nouveau projet"}</div>
           </div>
         </div>
@@ -617,7 +618,7 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <span className="text-lg">📄</span>
                 <div>
-                  <div className="text-sm font-medium text-zinc-200">J'ai déjà un zoning</div>
+                  <div className="text-sm font-medium text-zinc-200">J&apos;ai déjà un zoning</div>
                   <div className="text-xs text-zinc-500">Importer un PDF de zoning existant et passer directement au copywriting</div>
                 </div>
               </div>
@@ -640,7 +641,7 @@ export default function Home() {
                       <>Glissez votre PDF de zoning ici ou <span className="text-[#c4b5e0] underline">parcourir</span></>
                     )}
                   </div>
-                  <div className="text-zinc-600 text-xs mt-1">PDF du zoning fourni par le client ou l'équipe</div>
+                  <div className="text-zinc-600 text-xs mt-1">PDF du zoning fourni par le client ou l&apos;équipe</div>
                 </div>
                 <input id="zoning-pdf-input" type="file" accept=".pdf" onChange={(e) => setZoningPdf(e.target.files?.[0] || null)} className="hidden" />
 
@@ -668,7 +669,7 @@ export default function Home() {
               <>
                 <div className="space-y-2">
                   <label className="text-xs uppercase tracking-widest text-zinc-500">Brief client</label>
-                  <textarea value={brief} onChange={(e) => setBrief(e.target.value)} placeholder="Secteur d'activité, cibles, objectifs, positionnement, pages souhaitées..." rows={6} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
+                  <textarea value={brief} onChange={(e) => setBrief(e.target.value)} placeholder={"Secteur d'activité, cibles, objectifs, positionnement, pages souhaitées..."} rows={6} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
                 </div>
 
                 <div className="space-y-2">
@@ -677,7 +678,7 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-widest text-zinc-500">Notes d'entretien</label>
+                  <label className="text-xs uppercase tracking-widest text-zinc-500">Notes d&apos;entretien</label>
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes prises lors du rendez-vous client, verbatims, remarques..." rows={4} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
                 </div>
 
@@ -714,7 +715,7 @@ export default function Home() {
                   )}
 
                   <div className="space-y-2">
-                    <label className="text-xs text-zinc-600">Ou coller l'URL d'un PDF en ligne</label>
+                    <label className="text-xs text-zinc-600">Ou coller l&apos;URL d&apos;un PDF en ligne</label>
                     <input type="url" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} placeholder="https://exemple.fr/plaquette.pdf" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 transition-colors" />
                   </div>
                 </div>
