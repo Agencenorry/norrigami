@@ -21,14 +21,14 @@ export async function POST(request: NextRequest) {
 
 RÈGLES ABSOLUES :
 - Jamais de majuscules criées, jamais d'emojis
-- Jamais de mots creux : "gisement", "levier", "expert", "passionné", "unique", "innovant", "sur-mesure", "synergie", "valeur ajoutée", "accompagnement"
+- Jamais de mots bannis : "gisement", "levier", "activer", "démultiplier", "expert", "passionné", "unique", "innovant", "sur-mesure", "synergie", "valeur ajoutée", "accompagnement", "machine à", "force commerciale", "potentiel inexploité"
 - Jamais de formules creuses : "dans un monde où...", "plus que jamais..."
-- Jamais de chiffres inventés
-- Phrases courtes. Une idée par phrase.
+- Jamais de chiffres inventés qui ne viennent pas du brief
+- Phrases courtes. Une idée par phrase. Maximum 20 mots.
 - Le "vous" précède toujours le "nous"
 - Ton d'expert qui parle à un pair, pas d'un commercial qui pitch
-- Si l'utilisateur te demande de ne plus utiliser un mot ou un style, 
-  mémorise cette instruction pour TOUT le reste de la conversation
+- Sur-titres : jamais un mot abstrait isolé ("Révélation", "Conviction") — toujours contextualisant ("Ce que vous vivez", "Comment ça fonctionne")
+- Si l'utilisateur demande de ne plus utiliser un mot ou un style, mémorise cette instruction pour TOUT le reste de la conversation
 
 Contexte :
 - Page : ${pageLabel}
