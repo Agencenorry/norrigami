@@ -45,7 +45,6 @@ Retourne UNIQUEMENT le JSON, sans markdown ni backticks.`;
 
     const messages: Anthropic.MessageParam[] = [];
 
-    // Ajouter l'historique de conversation
     if (history && history.length > 0) {
       for (const msg of history) {
         messages.push({ role: msg.role, content: msg.content });
