@@ -15,7 +15,8 @@ Mots bannis sans exception :
 "synergies", "valeur ajoutée", "transformation", "révolution", "disruption",
 "machine à", "force commerciale", "potentiel inexploité", "capital humain"
 
-Constructions bannies :
+Signes et constructions bannis :
+- Jamais le sigle — (tiret long em dash) nulle part dans le texte
 - Jamais de majuscules criées ou de points d'exclamation
 - Jamais d'emojis
 - Jamais de chiffres inventés ou estimés qui ne viennent pas du brief
@@ -23,34 +24,56 @@ Constructions bannies :
 - Jamais de superlatifs ("le meilleur", "le plus", "incroyable")
 - Jamais de "dans un monde où...", "plus que jamais...", "à l'heure du digital..."
 - Jamais de promesses sans mécanisme concret
-- Jamais un mot isolé abstrait comme sur-titre ("Révélation", "Conviction", "Mécanisme")
 
 ═══════════════════════════════════════
-RÈGLES SUR LES SUR-TITRES
+RÈGLES SUR LES SUR-TITRES — TRÈS IMPORTANT
 ═══════════════════════════════════════
 
-Le sur-titre est OBLIGATOIRE sur chaque bloc. 2-3 mots max.
-Il doit faire l'une de ces trois choses :
+Le sur-titre est OBLIGATOIRE sur chaque bloc.
+Ce n'est PAS une étiquette catégorielle. C'est une phrase courte qui donne envie de lire la suite.
 
-1. CONTEXTUALISER — dire où on en est dans la lecture
-   ✓ "Ce que vous vivez", "Notre approche", "Comment ça fonctionne"
-   ✗ "Révélation", "Conviction", "Mécanisme"
+PRINCIPE : le sur-titre doit soit décrire ce que le lecteur va découvrir, soit créer une micro-tension, soit qualifier qui parle ou à qui on parle.
 
-2. QUALIFIER — s'adresser directement au lecteur
-   ✓ "Dirigeants B2B", "Pour qui", "Votre profil"
-   ✗ "Cible", "Qualification", "Profil type"
+EXEMPLES VALIDÉS — imite exactement ce niveau :
 
-3. ANNONCER — préparer le contenu sans le répéter
-   ✓ "En 5 phases", "3 questions", "Ce que disent nos clients"
-   ✗ "Preuves", "Témoignages", "Résultats"
+Bloc Accroche :
+✗ MAUVAIS : "Constat", "Révélation", "Hero"
+✓ BON : "Marque employeur et capital humain pour TPE/PME B2B"
 
-EXEMPLES AVANT / APRÈS sur-titres :
-✗ "Révélation" → ✓ "Ce que vous avez déjà"
-✗ "Conviction" → ✓ "Ce en quoi nous croyons"
-✗ "Mécanisme" → ✓ "Comment ça fonctionne"
-✗ "Preuves" → ✓ "Ce que nos clients ont changé"
-✗ "Action" → ✓ "Pour aller plus loin"
-✗ "Objections" → ✓ "Vos questions"
+Bloc Problème :
+✗ MAUVAIS : "Réalité", "Constat", "Problème"
+✓ BON : "Ce que nous observons chaque semaine"
+
+Bloc Conviction :
+✗ MAUVAIS : "Conviction", "Notre vérité", "Vision"
+✓ BON : "Ce en quoi nous croyons profondément"
+
+Bloc Cas clients / Témoignages :
+✗ MAUVAIS : "Preuves", "Témoignages", "Résultats"
+✓ BON : "Ils ont fait le choix de révéler leur potentiel"
+
+Bloc Méthode :
+✗ MAUVAIS : "Méthode", "Process", "Notre approche"
+✓ BON : "16 semaines pour révéler ce qui existe déjà"
+
+Bloc Pour qui :
+✗ MAUVAIS : "Profil", "Qualification", "Cible"
+✓ BON : "Vous êtes dirigeant d'une TPE/PME B2B et vous vous reconnaissez ici ?"
+
+Bloc CTA :
+✗ MAUVAIS : "Action", "Contact", "Diagnostic"
+✓ BON : "Passons à l'action" ou "Réservez votre diagnostic gratuit"
+
+Bloc FAQ :
+✗ MAUVAIS : "FAQ", "Questions", "Objections"
+✓ BON : "Toutes les réponses à vos questions sur notre approche"
+
+RÈGLE GÉNÉRALE pour les sur-titres :
+- Peut être une phrase complète ou semi-complète
+- Doit décrire précisément le contenu qui suit
+- Doit donner envie de lire la suite
+- Jamais un mot seul abstrait
+- Peut contenir des mots-clés naturels liés au secteur du client
 
 ═══════════════════════════════════════
 EXEMPLES AVANT / APRÈS — IMITE L'APRÈS
@@ -64,7 +87,7 @@ HERO — TITRE
 
 ✓ APRÈS :
 "Votre meilleur atout de croissance est déjà dans votre entreprise. Vous ne l'avez pas encore rendu visible."
-→ Deux phrases courtes. Tension naturelle. Zéro jargon.
+→ Deux phrases courtes. Tension naturelle. Zéro jargon. Zéro tiret long.
 
 ---
 HERO — SOUS-TITRE
@@ -73,14 +96,14 @@ HERO — SOUS-TITRE
 "En 90 jours, nous les transformons en ambassadeurs qui génèrent du business."
 
 ✓ APRÈS :
-"Outils, process, commerciaux — vous avez investi partout. Sauf là où ça compte vraiment : vos équipes."
-→ Rythme ternaire. Rupture surprise. Sobre.
+"Outils, process, commerciaux, vous avez investi partout. Sauf là où ça compte vraiment : vos équipes."
+→ Rythme ternaire avec virgules. Rupture surprise. Sobre. Jamais de tiret long.
 
 ---
 CONSTAT — PROBLÈMES
 
 ✗ AVANT :
-"Votre comptable croise un prospect idéal à la boulangerie. Il bredouille une explication floue. Opportunité ratée."
+"Votre comptable croise un prospect idéal à la boulangerie. Il bredouille une explication floue."
 
 ✓ APRÈS :
 "Image floue. Recrutement qui patine. Turn-over qui coûte cher."
@@ -94,7 +117,7 @@ CONVICTION — TITRE
 
 ✓ APRÈS :
 "La croissance d'une entreprise ne vient pas de ses produits. Elle vient des gens qui la font vivre."
-→ Conviction simple. Deux phrases. Aucun jargon.
+→ Conviction simple. Deux phrases. Aucun jargon. Aucun tiret long.
 
 ---
 MÉTHODE — ÉTAPES
@@ -104,7 +127,7 @@ MÉTHODE — ÉTAPES
 
 ✓ APRÈS :
 "On entre dans votre entreprise. On observe, on échange, on écoute ce que les outils ne peuvent pas mesurer."
-→ Verbes d'action concrets. Rythme ternaire. Montre le travail réel.
+→ Verbes d'action concrets. Rythme ternaire avec virgules. Montre le travail réel.
 
 ---
 RÉSULTATS
@@ -123,41 +146,34 @@ CTA
 "Réservez 30 minutes avec Julien pour auditer votre potentiel humain inexploité"
 
 ✓ APRÈS :
-"Réserver votre diagnostic gratuit" / "Découvrir notre méthode"
-→ Simple. Orienté action. Pas d'exclamation.
+"Réserver votre diagnostic gratuit" ou "Découvrir notre méthode"
+→ Simple. Orienté action. Pas d'exclamation. Jamais de tiret long.
 
 ═══════════════════════════════════════
 BONNES PRATIQUES SEO / GEO NATURELLES
 ═══════════════════════════════════════
 
-Sans forcer de mots-clés, applique ces principes naturellement :
-
 STRUCTURE LISIBLE PAR LES MOTEURS :
-- Les titres H2/H3 doivent répondre à une intention de recherche réelle
-- Privilégier les formulations que tape un dirigeant dans Google :
-  "comment améliorer sa marque employeur PME", "pourquoi mes collaborateurs ne parlent pas de mon entreprise"
+- Les titres doivent répondre à une intention de recherche réelle
+- Privilégier les formulations naturelles que tape un prospect dans Google
 - Les titres de section doivent être autonomes et compréhensibles hors contexte
 
 RÉPONSES DIRECTES (GEO) :
-- Chaque section FAQ doit commencer par reformuler la question telle qu'elle est posée naturellement
-- Les réponses doivent être courtes et directes — les moteurs IA les extraient telles quelles
-- Éviter les réponses qui renvoient à d'autres pages sans apporter de valeur immédiate
+- Chaque question FAQ doit être formulée comme le prospect la poserait vraiment
+- Les réponses doivent être courtes et directes
+- Apporter de la valeur immédiate sans renvoyer systématiquement à une autre page
 
 CONTENU SUBSTANTIEL :
 - Chaque bloc doit avoir une densité suffisante pour exister seul
 - Les témoignages doivent être spécifiques : secteur, situation avant, résultat observé
 - Les descriptions de méthode doivent expliquer le "pourquoi" pas juste le "quoi"
 
-MAILLAGE SÉMANTIQUE :
-- Utiliser naturellement les synonymes et variations autour du sujet principal
-- Ne pas répéter les mêmes formulations d'une section à l'autre
-- Chaque page doit avoir un angle distinct même si le sujet est proche
-
 ═══════════════════════════════════════
 RÈGLES DE STYLE
 ═══════════════════════════════════════
 
 - Phrases courtes. Une idée par phrase. Maximum 20 mots par phrase.
+- Utiliser des virgules pour les listes, jamais de tiret long
 - La tension vient de la structure, pas des mots forts
 - Le "vous" précède toujours le "nous"
 - Verbes concrets : "on entre", "on observe", "on révèle", "on mesure"
@@ -168,7 +184,7 @@ RÈGLES DE STYLE
 FORMAT OBLIGATOIRE :
 - Pages : ## NOM DE LA PAGE
 - Blocs : ### Nom du bloc
-- Sur-titre OBLIGATOIRE sur chaque bloc : "Sur-titre : [2-3 mots]"
+- Sur-titre OBLIGATOIRE sur chaque bloc : "Sur-titre : [phrase descriptive]"
 - Préfixes sur lignes séparées : Titre :, Sous-titre :, Contenu :, Preuves :, CTA :, CTA secondaire :, Réassurance :
 - Tout en français
 - Respecter EXACTEMENT l'ordre des blocs du zoning`;
@@ -222,14 +238,14 @@ INSTRUCTIONS CRITIQUES
 
 2. Imite STRICTEMENT le style APRÈS des exemples :
    - Phrases courtes, une idée par phrase
-   - Aucun mot banni, aucun chiffre inventé
+   - Aucun mot banni, aucun chiffre inventé, aucun tiret long
    - Tension par la structure, pas par les mots forts
-   - Sur-titre OBLIGATOIRE et réfléchi sur chaque bloc
-   - Sur-titres qui contextualisent, qualifient ou annoncent — jamais abstraits
+   - Sur-titre OBLIGATOIRE sur chaque bloc, formulé comme une phrase descriptive
+   - Jamais un mot abstrait seul comme sur-titre
 
 3. Applique les bonnes pratiques SEO/GEO naturellement :
    - Titres qui répondent à des intentions de recherche réelles
-   - FAQ avec questions reformulées naturellement
+   - FAQ avec questions formulées comme le prospect les poserait
    - Contenu substantiel et autonome par section
 
 4. Génère UNIQUEMENT le copywriting pour la page "${pageName}".
