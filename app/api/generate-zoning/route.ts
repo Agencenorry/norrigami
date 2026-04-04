@@ -39,6 +39,25 @@ Si le site a des rubriques avec sous-pages, crée d'abord une entrée de menu (p
 - **Contact** : uniquement Navigation, Introduction, Formulaire de contact, Embed Calendly, Infos pratiques et disponibilités (un seul bloc), FAQ (3 questions max), Footer
 - **Landing page ville** : Navigation classique simplifiée avec ancres (pas "navigation locale"), embed Calendly directement (pas de CTA de prise de RDV), pas de FAQ
 
+### Structure visuelle des blocs — OBLIGATOIRE
+Pour chaque bloc, précise entre parenthèses la structure visuelle attendue.
+Exemples :
+
+- **Notre approche** (3 cards : titre + description) : Expliquer les 3 piliers
+- **Nos services** (4 cards : icône + titre + description + CTA) : Présenter les offres
+- **Chiffres clés** (3 stats : chiffre + label) : Prouver la crédibilité
+- **Témoignages** (2 cards : citation + nom + poste) : Renforcer la confiance
+- **Étapes de méthode** (5 étapes numérotées : titre + description) : Expliquer le process
+- **Bénéfices** (3 colonnes : icône + titre + texte) : Lister les avantages
+- **FAQ** (6 accordéons : question + réponse) : Répondre aux objections
+- **Équipe** (4 cards : photo + nom + poste + bio courte) : Humaniser
+
+Règles :
+- Le nombre doit être cohérent avec le contenu réel du client
+- Toujours préciser : nombre d'éléments + composants de chaque élément
+- Pour les blocs simples (hero, CTA, footer) : pas de précision nécessaire
+- Utiliser uniquement des structures réalistes pour le web
+
 ### Règles de vocabulaire — OBLIGATOIRE
 - Pas d'anglicismes : "Social Proof" → "Preuves sociales", "Hero Section" → "Accroche" ou "Introduction", "Call to Action" → "Appel à l'action"
 - Dans les blocs de chiffres/statistiques : ne jamais utiliser le mot "records"

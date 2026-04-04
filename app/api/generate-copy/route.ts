@@ -236,19 +236,32 @@ INSTRUCTIONS CRITIQUES
    - Adresse les objections et personas décrits
    - Reflète le positionnement exact, pas générique
 
-2. Imite STRICTEMENT le style APRÈS des exemples :
+2. Le zoning précise la structure visuelle entre parenthèses.
+   Respecte-la EXACTEMENT :
+   - "3 cards" = génère exactement 3 blocs distincts formatés identiquement
+   - "5 étapes numérotées" = génère exactement 5 étapes avec le même format
+   - Chaque élément d'une card doit être sur une ligne séparée avec son préfixe
+   - Format d'une card : Titre card : / Description card : / CTA card : (si applicable)
+   - Format d'une étape : Étape 1 : [titre] / Description : [texte]
+
+3. Imite STRICTEMENT le style APRÈS des exemples :
    - Phrases courtes, une idée par phrase
    - Aucun mot banni, aucun chiffre inventé, aucun tiret long
    - Tension par la structure, pas par les mots forts
    - Sur-titre OBLIGATOIRE sur chaque bloc, formulé comme une phrase descriptive
    - Jamais un mot abstrait seul comme sur-titre
 
-3. Applique les bonnes pratiques SEO/GEO naturellement :
+4. Applique les bonnes pratiques SEO/GEO naturellement :
    - Titres qui répondent à des intentions de recherche réelles
    - FAQ avec questions formulées comme le prospect les poserait
    - Contenu substantiel et autonome par section
 
-4. Génère UNIQUEMENT le copywriting pour la page "${pageName}".
+5. Génère UNIQUEMENT le copywriting pour la page "${pageName}".
+
+6. VÉRIFICATION FINALE avant de répondre : relis chaque chiffre,
+   pourcentage, durée et montant que tu as écrit. Si ce chiffre
+   ne vient pas mot pour mot du brief fourni, supprime-le et
+   remplace-le par une formulation qualitative.
 `;
 
     userContent.push({ type: "text", text: prompt });
@@ -265,7 +278,10 @@ INSTRUCTIONS CRITIQUES
       .map((b) => (b.type === "text" ? b.text : ""))
       .join("\n");
 
-    return NextResponse.json({ copy });
+    // Suppression automatique des tirets longs
+    const cleanCopy = copy.replace(/\s*—\s*/g, ", ").replace(/—/g, "");
+
+    return NextResponse.json({ copy: cleanCopy });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
