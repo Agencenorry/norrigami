@@ -98,7 +98,7 @@ function IconPen({ className }: { className?: string }) {
 function Spinner({ className }: { className?: string }) {
   return (
     <div
-      className={`rounded-full border-2 border-[#E5E5E5] border-t-[#111111] animate-spin ${className || "w-6 h-6"}`}
+      className={`rounded-full border-2 border-[#E5E5E5] border-t-[#2E1343] animate-spin ${className || "w-6 h-6"}`}
       role="status"
       aria-label="Chargement"
     />
@@ -165,19 +165,23 @@ function extractPages(zoning: string): { name: string; content: string }[] {
 }
 
 const btnPrimary =
-  "bg-[#111111] text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#333333] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+  "bg-[#2E1343] text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#3d1a5a] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
 const btnSecondary =
   "bg-white border border-[#E5E5E5] text-[#111111] rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#F5F5F5] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
 const field =
-  "w-full bg-white border border-[#E5E5E5] rounded-lg p-3 text-sm text-[#111111] placeholder-[#9B9B9B] focus:outline-none focus:border-[#111111] resize-none transition-colors";
-const card = "bg-white border border-[#E5E5E5] rounded-xl p-5 hover:border-[#111111] transition-colors";
+  "w-full bg-white border border-[#E5E5E5] rounded-lg p-3 text-sm text-[#111111] placeholder-[#9B9B9B] focus:outline-none focus:border-[#2E1343] resize-none transition-colors";
+const card = "bg-white border border-[#E5E5E5] rounded-xl p-5 hover:border-[#2E1343] transition-colors";
 
 export default function Home() {
   const [view, setView] = useState<View>("home");
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [step, setStep] = useState<ProjectStep>("brief");
-  const [ngrokUrl, setNgrokUrl] = useState("");
+  const [ngrokUrl] = useState(() =>
+    typeof window !== "undefined"
+      ? (localStorage.getItem("kore-ngrok") ?? localStorage.getItem("norrigami-ngrok") ?? "")
+      : ""
+  );
   const [loadingProjects, setLoadingProjects] = useState(true);
 
   const [brief, setBrief] = useState("");
@@ -227,7 +231,6 @@ export default function Home() {
     const savedNgrok =
       localStorage.getItem("kore-ngrok") ?? localStorage.getItem("norrigami-ngrok");
     if (savedNgrok) {
-      setNgrokUrl(savedNgrok);
       localStorage.setItem("kore-ngrok", savedNgrok);
     }
   }, []);
@@ -645,16 +648,6 @@ export default function Home() {
             <div className="text-xs text-[#6B6B6B] uppercase tracking-widest">Zoning · Copywriting CRO/SEO</div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            <input
-              type="text"
-              value={ngrokUrl}
-              onChange={(e) => {
-                setNgrokUrl(e.target.value);
-                localStorage.setItem("kore-ngrok", e.target.value);
-              }}
-              placeholder="URL ngrok (optionnel)"
-              className={`${field} w-56 max-w-full text-xs py-2`}
-            />
             <button type="button" onClick={createProject} className={btnPrimary}>
               Nouveau projet
             </button>
@@ -702,7 +695,7 @@ export default function Home() {
                       <div className="font-medium text-[#111111] truncate">{project.name}</div>
                       <div className="text-xs text-[#6B6B6B] mt-0.5 flex flex-wrap items-center gap-3">
                         <span>{new Date(project.createdAt).toLocaleDateString("fr-FR")}</span>
-                        {project.zoning && <span className="text-[#111111]">Zoning ✓</span>}
+                        {project.zoning && <span className="text-[#2E1343]">Zoning ✓</span>}
                         {project.copy && <span className="text-[#16A34A]">Copy ✓</span>}
                         {project.miroUrl && <span className="text-[#6B6B6B]">Miro ✓</span>}
                       </div>
@@ -835,9 +828,9 @@ export default function Home() {
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                       isDone
-                        ? "bg-[#111111] text-white"
+                        ? "bg-[#2E1343] text-white"
                         : isActive
-                          ? "bg-[#111111] text-white"
+                          ? "bg-[#2E1343] text-white"
                           : "bg-[#F5F5F5] text-[#6B6B6B] border border-[#E5E5E5]"
                     }`}
                   >
@@ -867,7 +860,7 @@ export default function Home() {
             <div
               onClick={() => setHasExistingZoning(!hasExistingZoning)}
               className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors ${
-                hasExistingZoning ? "bg-[#F5F5F5] border-[#111111]" : "bg-white border-[#E5E5E5] hover:border-[#111111]"
+                hasExistingZoning ? "bg-[#F5F5F5] border-[#2E1343]" : "bg-white border-[#E5E5E5] hover:border-[#2E1343]"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -879,7 +872,7 @@ export default function Home() {
               </div>
               <div
                 className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 shrink-0 ${
-                  hasExistingZoning ? "bg-[#111111]" : "bg-[#E5E5E5]"
+                  hasExistingZoning ? "bg-[#2E1343]" : "bg-[#E5E5E5]"
                 }`}
               >
                 <div
@@ -892,7 +885,7 @@ export default function Home() {
               <div className="space-y-4">
                 <div
                   onClick={() => document.getElementById("zoning-pdf-input")?.click()}
-                  className="border-2 border-dashed border-[#E5E5E5] hover:border-[#111111] bg-white rounded-xl p-10 text-center cursor-pointer transition-colors"
+                  className="border-2 border-dashed border-[#E5E5E5] hover:border-[#2E1343] bg-white rounded-xl p-10 text-center cursor-pointer transition-colors"
                 >
                   <IconUpload className="w-8 h-8 mx-auto mb-3 text-[#6B6B6B]" />
                   <div className="text-[#6B6B6B] text-sm">
@@ -992,7 +985,7 @@ export default function Home() {
                       handleFiles(e.dataTransfer.files);
                     }}
                     className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-                      dragging ? "border-[#111111] bg-[#F5F5F5]" : "border-[#E5E5E5] hover:border-[#111111] bg-white"
+                      dragging ? "border-[#2E1343] bg-[#F5F5F5]" : "border-[#E5E5E5] hover:border-[#2E1343] bg-white"
                     }`}
                   >
                     <IconUpload className="w-6 h-6 mx-auto mb-2 text-[#6B6B6B]" />
@@ -1175,7 +1168,7 @@ export default function Home() {
               />
               <div
                 onClick={() => document.getElementById("copy-brief-file")?.click()}
-                className="border-2 border-dashed border-[#E5E5E5] hover:border-[#111111] rounded-xl p-5 text-center cursor-pointer transition-colors bg-white"
+                className="border-2 border-dashed border-[#E5E5E5] hover:border-[#2E1343] rounded-xl p-5 text-center cursor-pointer transition-colors bg-white"
               >
                 <div className="text-[#6B6B6B] text-sm inline-flex items-center justify-center gap-2">
                   <IconUpload className="w-4 h-4" />
@@ -1204,7 +1197,7 @@ export default function Home() {
               />
               <div
                 onClick={() => document.getElementById("keywords-file")?.click()}
-                className="border-2 border-dashed border-[#E5E5E5] hover:border-[#111111] rounded-xl p-5 text-center cursor-pointer transition-colors bg-white"
+                className="border-2 border-dashed border-[#E5E5E5] hover:border-[#2E1343] rounded-xl p-5 text-center cursor-pointer transition-colors bg-white"
               >
                 <div className="text-[#6B6B6B] text-sm inline-flex items-center justify-center gap-2">
                   <IconUpload className="w-4 h-4" />
@@ -1322,7 +1315,7 @@ export default function Home() {
                   type="button"
                   onClick={() => setActiveTab(tab)}
                   className={`px-5 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer inline-flex items-center gap-2 ${
-                    activeTab === tab ? "bg-[#111111] text-white" : "text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F5F5F5]"
+                    activeTab === tab ? "bg-[#2E1343] text-white" : "text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F5F5F5]"
                   }`}
                 >
                   {tab === "zoning" ? (
@@ -1351,13 +1344,13 @@ export default function Home() {
                       onClick={() => isDone && setActiveCopyPage(page.name)}
                       disabled={!isDone}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors
-                        ${isActive && isDone ? "bg-[#111111] border-[#111111] text-white" : ""}
-                        ${!isActive && isDone ? "bg-white border-[#E5E5E5] text-[#111111] hover:border-[#111111] cursor-pointer" : ""}
+                        ${isActive && isDone ? "bg-[#2E1343] border-[#2E1343] text-white" : ""}
+                        ${!isActive && isDone ? "bg-white border-[#E5E5E5] text-[#111111] hover:border-[#2E1343] cursor-pointer" : ""}
                         ${isGenerating ? "bg-[#F5F5F5] border-[#E5E5E5] text-[#6B6B6B] cursor-wait" : ""}
                         ${!isDone && !isGenerating ? "bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B] cursor-not-allowed opacity-60" : ""}
                       `}
                     >
-                      {isGenerating && <span className="w-2 h-2 rounded-full bg-[#111111] animate-pulse inline-block" />}
+                      {isGenerating && <span className="w-2 h-2 rounded-full bg-[#2E1343] animate-pulse inline-block" />}
                       {isDone && !isGenerating && <span className="text-[#16A34A] text-xs">✓</span>}
                       {page.name}
                     </button>
@@ -1425,8 +1418,8 @@ export default function Home() {
                       onClick={() => setFeedbackTarget(t)}
                       className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
                         feedbackTarget === t
-                          ? "border-[#111111] bg-[#111111] text-white"
-                          : "border-[#E5E5E5] text-[#6B6B6B] hover:text-[#111111] hover:border-[#111111] bg-white"
+                          ? "border-[#2E1343] bg-[#2E1343] text-white"
+                          : "border-[#E5E5E5] text-[#6B6B6B] hover:text-[#111111] hover:border-[#2E1343] bg-white"
                       }`}
                     >
                       {t === "zoning" ? "Corriger le zoning" : "Corriger le copywriting"}
