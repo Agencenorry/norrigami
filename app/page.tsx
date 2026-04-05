@@ -772,7 +772,7 @@ export default function Home() {
     return (
       <main className="min-h-screen bg-[#FAFAFA] text-[#220D31]">
         <div className="border-b border-[#E5E5E5] bg-white px-8 py-5 flex items-center justify-between relative">
-          <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto" unoptimized />
+          <Image src="/logo-kore-02.svg" alt="Kore" width={160} height={32} className="h-8 w-auto" unoptimized />
           <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
             <span className="text-xs text-[#6B6B6B] uppercase tracking-widest">Zoning · Copywriting CRO/SEO</span>
           </div>
@@ -940,7 +940,7 @@ export default function Home() {
             className="p-0 border-0 bg-transparent cursor-pointer shrink-0"
             aria-label="Retour à l’accueil"
           >
-            <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto shrink-0" unoptimized />
+            <Image src="/logo-kore-02.svg" alt="Kore" width={160} height={32} className="h-8 w-auto shrink-0" unoptimized />
           </button>
         </div>
         <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
