@@ -644,8 +644,8 @@ export default function Home() {
       <main className="min-h-screen bg-[#FAFAFA] text-[#220D31]">
         <div className="border-b border-[#E5E5E5] bg-white px-8 py-5 flex items-center justify-between relative">
           <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto" unoptimized />
-          <div className="absolute left-1/2 -translate-x-1/2 text-xs text-[#6B6B6B] uppercase tracking-widest">
-            Zoning · Copywriting CRO/SEO
+          <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
+            <span className="text-xs text-[#6B6B6B] uppercase tracking-widest">Zoning · Copywriting CRO/SEO</span>
           </div>
           <button type="button" onClick={createProject} className={btnPrimary}>
             Nouveau projet
