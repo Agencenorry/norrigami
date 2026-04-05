@@ -802,13 +802,20 @@ export default function Home() {
             ← Projets
           </button>
           <div className="w-px h-5 bg-[#E5E5E5] shrink-0" />
-          <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => {
+              setView("home");
+              fetchProjects();
+            }}
+            className="p-0 border-0 bg-transparent cursor-pointer shrink-0"
+            aria-label="Retour à l’accueil"
+          >
             <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto shrink-0" unoptimized />
-            <div className="font-semibold text-sm truncate text-[#220D31]">{currentProject?.name || "Nouveau projet"}</div>
-          </div>
+          </button>
         </div>
-        <div className="absolute left-1/2 -translate-x-1/2 text-xs text-[#6B6B6B] uppercase tracking-widest pointer-events-none">
-          Zoning · Copywriting CRO/SEO
+        <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
+          <span className="text-xs text-[#6B6B6B] uppercase tracking-widest">Zoning · Copywriting CRO/SEO</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap shrink-0">
           {[
@@ -1046,6 +1053,7 @@ export default function Home() {
           <div className="space-y-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
+                <p className="text-xs text-[#6B6B6B] uppercase tracking-widest mb-1">{currentProject?.name}</p>
                 <h1 className="text-2xl font-semibold text-[#220D31]">Zoning généré</h1>
                 <p className="text-[#6B6B6B] text-sm mt-1">Relisez et corrigez avant de passer au copywriting.</p>
               </div>
@@ -1070,7 +1078,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleExportFigJam}
-                  className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
+                  className="inline-flex items-center gap-2 text-xs py-2 px-4 rounded-lg font-medium transition-colors cursor-pointer bg-[#E4C6FB] text-[#220D31] border border-[#E4C6FB] hover:bg-[#d9b0f8] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <IconZoning className="w-4 h-4" />
                   Zoning FigJam
@@ -1153,6 +1161,7 @@ export default function Home() {
         {step === "copy-brief" && (
           <div className="space-y-8">
             <div>
+              <p className="text-xs text-[#6B6B6B] uppercase tracking-widest mb-1">{currentProject?.name}</p>
               <h1 className="text-2xl font-semibold text-[#220D31]">Brief copywriting</h1>
               <p className="text-[#6B6B6B] text-sm mt-1">Fournissez le brief copy et les mots-clés SEO pour générer les textes.</p>
             </div>
@@ -1242,6 +1251,7 @@ export default function Home() {
           <div className="space-y-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
+                <p className="text-xs text-[#6B6B6B] uppercase tracking-widest mb-1">{currentProject?.name}</p>
                 <h1 className="text-2xl font-semibold text-[#220D31]">Livrables complets</h1>
                 <p className="text-[#6B6B6B] text-sm mt-1">
                   {loadingCopy
@@ -1262,6 +1272,14 @@ export default function Home() {
                     >
                       <IconCopy className="w-4 h-4" />
                       Copier tout
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleExportFigJam}
+                      className="inline-flex items-center gap-2 text-xs py-2 px-4 rounded-lg font-medium transition-colors cursor-pointer bg-[#E4C6FB] text-[#220D31] border border-[#E4C6FB] hover:bg-[#d9b0f8] disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <IconZoning className="w-4 h-4" />
+                      Zoning FigJam
                     </button>
                     {currentProject?.copy && (
                       <button
@@ -1295,14 +1313,6 @@ export default function Home() {
                         {loadingMiroCopy ? "Export..." : "Wireframes Miro"}
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={handleExportFigJam}
-                      className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
-                    >
-                      <IconZoning className="w-4 h-4" />
-                      Zoning FigJam
-                    </button>
                   </>
                 )}
               </div>
