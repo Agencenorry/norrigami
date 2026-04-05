@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface Project {
   id: string;
@@ -22,6 +22,102 @@ interface Project {
 type View = "home" | "project";
 type ProjectStep = "brief" | "zoning" | "copy-brief" | "copy";
 
+function IconCopy({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+    </svg>
+  );
+}
+
+function IconTrash({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+function IconUpload({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  );
+}
+
+function IconFigma({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z" />
+      <path d="M7 7h.01" />
+    </svg>
+  );
+}
+
+function IconMiro({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M9 12h6M12 9v6" />
+    </svg>
+  );
+}
+
+function IconUxPilot({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+
+function IconZoning({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+    </svg>
+  );
+}
+
+function IconPen({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+    </svg>
+  );
+}
+
+function Spinner({ className }: { className?: string }) {
+  return (
+    <div
+      className={`rounded-full border-2 border-[#E5E5E5] border-t-[#111111] animate-spin ${className || "w-6 h-6"}`}
+      role="status"
+      aria-label="Chargement"
+    />
+  );
+}
+
+function buildUxPilotPrompt(zoning: string | null, copy: string | null) {
+  return `Tu es un expert UX/UI. Génère une maquette complète pour ce site web.
+
+ZONING :
+${zoning || ""}
+
+COPYWRITING :
+${copy || ""}
+
+Instructions : Crée une maquette fidèle au zoning et au copy fournis.
+Utilise un design moderne, épuré, professionnel pour une entreprise B2B.`;
+}
+
 function extractPages(zoning: string): { name: string; content: string }[] {
   const pages: { name: string; content: string }[] = [];
   const lines = zoning.split("\n");
@@ -35,16 +131,18 @@ function extractPages(zoning: string): { name: string; content: string }[] {
     const isPagePrefix = trimmed.match(/^Page\s*:\s*(.+)/i);
     const isDashHeader = trimmed.match(/^-{3,}\s*(.+)\s*-{3,}/);
 
-    // Ligne en majuscules : pas de puce, pas de #, pas de :, que des majuscules/chiffres/espaces/tirets
     const isUppercaseTitle =
-      !trimmed.startsWith("*") &&
-      !trimmed.startsWith("-") &&
-      !trimmed.startsWith("#") &&
-      !trimmed.includes(":") &&
-      trimmed.length > 3 &&
-      /^[A-ZÀÂÄÉÈÊËÎÏÔÖÙÛÜÇŒÆ0-9\s\-\/'.()]+$/i.test(trimmed) &&
-      trimmed === trimmed.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().normalize("NFC") ||
-      /^[A-Z0-9\s\-\/'.()ÀÂÄÉÈÊËÎÏÔÖÙÛÜÇŒÆ]+$/.test(trimmed) && trimmed.length > 3 && !trimmed.startsWith("*") && !trimmed.startsWith("-");
+      (!trimmed.startsWith("*") &&
+        !trimmed.startsWith("-") &&
+        !trimmed.startsWith("#") &&
+        !trimmed.includes(":") &&
+        trimmed.length > 3 &&
+        /^[A-ZÀÂÄÉÈÊËÎÏÔÖÙÛÜÇŒÆ0-9\s\-\/'.()]+$/i.test(trimmed) &&
+        trimmed === trimmed.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().normalize("NFC")) ||
+      (/^[A-Z0-9\s\-\/'.()ÀÂÄÉÈÊËÎÏÔÖÙÛÜÇŒÆ]+$/.test(trimmed) &&
+        trimmed.length > 3 &&
+        !trimmed.startsWith("*") &&
+        !trimmed.startsWith("-"));
 
     const match = isMdHeader || isPagePrefix || isDashHeader;
     const pageName = match
@@ -66,6 +164,14 @@ function extractPages(zoning: string): { name: string; content: string }[] {
   return pages;
 }
 
+const btnPrimary =
+  "bg-[#111111] text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#333333] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+const btnSecondary =
+  "bg-white border border-[#E5E5E5] text-[#111111] rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#F5F5F5] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+const field =
+  "w-full bg-white border border-[#E5E5E5] rounded-lg p-3 text-sm text-[#111111] placeholder-[#9B9B9B] focus:outline-none focus:border-[#111111] resize-none transition-colors";
+const card = "bg-white border border-[#E5E5E5] rounded-xl p-5 hover:border-[#111111] transition-colors";
+
 export default function Home() {
   const [view, setView] = useState<View>("home");
   const [projects, setProjects] = useState<Project[]>([]);
@@ -74,7 +180,6 @@ export default function Home() {
   const [ngrokUrl, setNgrokUrl] = useState("");
   const [loadingProjects, setLoadingProjects] = useState(true);
 
-  // Form zoning
   const [brief, setBrief] = useState("");
   const [url, setUrl] = useState("");
   const [notes, setNotes] = useState("");
@@ -83,38 +188,39 @@ export default function Home() {
   const [files, setFiles] = useState<File[]>([]);
   const [dragging, setDragging] = useState(false);
 
-  // Import zoning PDF
   const [hasExistingZoning, setHasExistingZoning] = useState(false);
   const [zoningPdf, setZoningPdf] = useState<File | null>(null);
   const [loadingImportZoning, setLoadingImportZoning] = useState(false);
 
-  // Form copy
   const [copyBrief, setCopyBrief] = useState("");
   const [copyBriefFile, setCopyBriefFile] = useState<File | null>(null);
   const [keywords, setKeywords] = useState("");
   const [keywordsFile, setKeywordsFile] = useState<File | null>(null);
 
-  // Loading
   const [loadingZoning, setLoadingZoning] = useState(false);
   const [loadingCopy, setLoadingCopy] = useState(false);
   const [loadingMiro, setLoadingMiro] = useState(false);
   const [loadingMiroCopy, setLoadingMiroCopy] = useState(false);
-  const [loadingFigJamCopy, setLoadingFigJamCopy] = useState(false);
 
-  // Error
   const [error, setError] = useState<string | null>(null);
 
-  // Feedback
   const [feedback, setFeedback] = useState("");
   const [feedbackTarget, setFeedbackTarget] = useState<"zoning" | "copy">("zoning");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
 
-  // Active tab
   const [activeTab, setActiveTab] = useState<"zoning" | "copy">("zoning");
 
   const [copyPages, setCopyPages] = useState<{ name: string; content: string }[]>([]);
   const [activeCopyPage, setActiveCopyPage] = useState<string>("");
   const [generatingPageIndex, setGeneratingPageIndex] = useState<number>(-1);
+
+  const [uxPilotOpen, setUxPilotOpen] = useState(false);
+  const [figJamNotice, setFigJamNotice] = useState<{ apiUrl: string; projectId: string } | null>(null);
+
+  const uxPilotPromptText = useMemo(
+    () => buildUxPilotPrompt(currentProject?.zoning ?? null, currentProject?.copy ?? null),
+    [currentProject?.zoning, currentProject?.copy]
+  );
 
   useEffect(() => {
     fetchProjects();
@@ -132,21 +238,23 @@ export default function Home() {
       const response = await fetch("/api/projects");
       const data = await response.json();
       if (data.projects) {
-        setProjects(data.projects.map((p: Record<string, string>) => ({
-          id: p.id,
-          name: p.name,
-          createdAt: p.created_at,
-          brief: p.brief || "",
-          url: p.url || "",
-          notes: p.notes || "",
-          sprints: p.sprints || "",
-          zoning: p.zoning || null,
-          copy: p.copy || null,
-          miroUrl: p.miro_url || null,
-          miroBoardId: p.miro_board_id || null,
-          copyBrief: p.copy_brief || "",
-          keywords: p.keywords || "",
-        })));
+        setProjects(
+          data.projects.map((p: Record<string, string>) => ({
+            id: p.id,
+            name: p.name,
+            createdAt: p.created_at,
+            brief: p.brief || "",
+            url: p.url || "",
+            notes: p.notes || "",
+            sprints: p.sprints || "",
+            zoning: p.zoning || null,
+            copy: p.copy || null,
+            miroUrl: p.miro_url || null,
+            miroBoardId: p.miro_board_id || null,
+            copyBrief: p.copy_brief || "",
+            keywords: p.keywords || "",
+          }))
+        );
       }
     } catch (err) {
       console.error(err);
@@ -168,17 +276,30 @@ export default function Home() {
       id: `project-${Date.now()}`,
       name: "Nouveau projet",
       createdAt: new Date().toISOString(),
-      brief: "", url: "", notes: "", sprints: "",
-      zoning: null, copy: null,
-      miroUrl: null, miroBoardId: null,
-      copyBrief: "", keywords: "",
+      brief: "",
+      url: "",
+      notes: "",
+      sprints: "",
+      zoning: null,
+      copy: null,
+      miroUrl: null,
+      miroBoardId: null,
+      copyBrief: "",
+      keywords: "",
     };
     setCurrentProject(project);
-    setBrief(""); setUrl(""); setNotes(""); setSprints("");
-    setPdfUrl(""); setFiles([]);
-    setCopyBrief(""); setCopyBriefFile(null);
-    setKeywords(""); setKeywordsFile(null);
-    setHasExistingZoning(false); setZoningPdf(null);
+    setBrief("");
+    setUrl("");
+    setNotes("");
+    setSprints("");
+    setPdfUrl("");
+    setFiles([]);
+    setCopyBrief("");
+    setCopyBriefFile(null);
+    setKeywords("");
+    setKeywordsFile(null);
+    setHasExistingZoning(false);
+    setZoningPdf(null);
     setStep("brief");
     setError(null);
     setView("project");
@@ -192,7 +313,8 @@ export default function Home() {
     setSprints(project.sprints || "");
     setCopyBrief(project.copyBrief || "");
     setKeywords(project.keywords || "");
-    setHasExistingZoning(false); setZoningPdf(null);
+    setHasExistingZoning(false);
+    setZoningPdf(null);
     setStep(project.copy ? "copy" : project.zoning ? "zoning" : "brief");
     setError(null);
     setView("project");
@@ -243,27 +365,49 @@ export default function Home() {
   };
 
   function parseZoningForFigJam(zoningText: string) {
-    const pages: { cleanLabel: string; type: string; sprint: number | null; sections: { label: string; objective: string }[] }[] = [];
+    const pages: {
+      cleanLabel: string;
+      type: string;
+      sprint: number | null;
+      sections: { label: string; objective: string }[];
+    }[] = [];
     const lines = zoningText.split("\n");
-    let currentPage: typeof pages[0] | null = null;
+    let currentPage: (typeof pages)[0] | null = null;
 
     for (const line of lines) {
       const trimmed = line.trim();
       if (trimmed.match(/^#{1,3} /)) {
         const rawLabel = trimmed.replace(/^#+\s*/, "").replace(/^\d+\.\s*/, "").trim();
-        if (rawLabel.toLowerCase().includes("zoning") || rawLabel.toLowerCase().includes("architecture") || rawLabel.length < 2) continue;
+        if (
+          rawLabel.toLowerCase().includes("zoning") ||
+          rawLabel.toLowerCase().includes("architecture") ||
+          rawLabel.length < 2
+        )
+          continue;
         if (currentPage) pages.push(currentPage);
         const sprintMatch = rawLabel.match(/\[Sprint\s*(\d+)\]/i);
         const sprint = sprintMatch ? parseInt(sprintMatch[1]) : null;
         const cleanLabel = rawLabel.replace(/\[Sprint\s*\d+\]/gi, "").trim();
-        const type = cleanLabel.toLowerCase().includes("mention") || cleanLabel.toLowerCase().includes("politique") || cleanLabel.toLowerCase().includes("404")
-          ? "utility" : pages.length === 0 ? "main" : "secondary";
+        const type =
+          cleanLabel.toLowerCase().includes("mention") ||
+          cleanLabel.toLowerCase().includes("politique") ||
+          cleanLabel.toLowerCase().includes("404")
+            ? "utility"
+            : pages.length === 0
+              ? "main"
+              : "secondary";
         currentPage = { cleanLabel, type, sprint, sections: [] };
       } else if (trimmed.startsWith("- ") && currentPage) {
         const content = trimmed.slice(2);
         const boldMatch = content.match(/^\*\*([^*]+)\*\*/);
-        const label = boldMatch ? boldMatch[1].replace(/\s*:\s*$/, "").trim() : content.split(":")[0].replace(/\*\*/g, "").trim();
-        const objective = content.replace(/^\*\*[^*]+\*\*\s*:?\s*/, "").replace(/^\s*:\s*/, "").replace(/\*\*/g, "").trim();
+        const label = boldMatch
+          ? boldMatch[1].replace(/\s*:\s*$/, "").trim()
+          : content.split(":")[0].replace(/\*\*/g, "").trim();
+        const objective = content
+          .replace(/^\*\*[^*]+\*\*\s*:?\s*/, "")
+          .replace(/^\s*:\s*/, "")
+          .replace(/\*\*/g, "")
+          .trim();
         if (label.length > 1) currentPage.sections.push({ label, objective });
       }
     }
@@ -304,7 +448,11 @@ export default function Home() {
       const response = await fetch("/api/miro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zoningText: currentProject.zoning, projectName: currentProject.name, sprints: currentProject.sprints }),
+        body: JSON.stringify({
+          zoningText: currentProject.zoning,
+          projectName: currentProject.name,
+          sprints: currentProject.sprints,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
@@ -329,29 +477,9 @@ export default function Home() {
       });
       if (!response.ok) throw new Error("Erreur sauvegarde");
       const apiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://kore.vercel.app/api/figjam-zoning`;
-      alert(`✓ Zoning prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Kore et renseigne :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`);
+      setFigJamNotice({ apiUrl, projectId: currentProject.id });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur export FigJam");
-    }
-  };
-
-  const handleExportCopyToFigJam = async () => {
-    if (!currentProject?.copy) return;
-    setLoadingFigJamCopy(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/figjam-copy/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: currentProject.id, projectName: currentProject.name, copyText: currentProject.copy }),
-      });
-      if (!response.ok) throw new Error("Erreur sauvegarde copy FigJam");
-      const apiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://kore.vercel.app/api/figjam-zoning`;
-      alert(`✓ Copy prêt pour FigJam !\n\nDans FigJam, ouvre le plugin Kore et clique sur "Générer les wireframes copy" :\n\n• URL : ${apiUrl}\n• ID du projet : ${currentProject.id}`);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erreur export copy FigJam");
-    } finally {
-      setLoadingFigJamCopy(false);
     }
   };
 
@@ -400,7 +528,6 @@ export default function Home() {
         results[i] = { name: page.name, content: data.copy };
         setCopyPages([...results]);
 
-        // Pause entre les pages pour éviter le rate limit
         if (i < pages.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 2000));
         }
@@ -428,7 +555,11 @@ export default function Home() {
       const response = await fetch("/api/miro-copy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ boardId: currentProject.miroBoardId, copyText: currentProject.copy, zoningText: currentProject.zoning }),
+        body: JSON.stringify({
+          boardId: currentProject.miroBoardId,
+          copyText: currentProject.copy,
+          zoningText: currentProject.zoning,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
@@ -444,9 +575,10 @@ export default function Home() {
     if (!feedback.trim() || !currentProject) return;
     setFeedbackLoading(true);
     const current = feedbackTarget === "zoning" ? currentProject.zoning : currentProject.copy;
-    const systemPrompt = feedbackTarget === "zoning"
-      ? "Tu es un expert en architecture web et UX. Tu vas corriger et améliorer un zoning de site web selon les instructions données."
-      : "Tu es un expert en copywriting CRO, SEO et GEO. Tu vas corriger et améliorer un copywriting de site web selon les instructions données.";
+    const systemPrompt =
+      feedbackTarget === "zoning"
+        ? "Tu es un expert en architecture web et UX. Tu vas corriger et améliorer un zoning de site web selon les instructions données."
+        : "Tu es un expert en copywriting CRO, SEO et GEO. Tu vas corriger et améliorer un copywriting de site web selon les instructions données.";
     try {
       const response = await fetch("/api/feedback", {
         method: "POST",
@@ -467,60 +599,84 @@ export default function Home() {
 
   const renderMarkdown = (text: string) => {
     return text.split("\n").map((line, i) => {
-      if (line.startsWith("## ")) return <h2 key={i} className="text-xl font-semibold text-[#c4b5e0] mt-8 mb-3">{line.replace("## ", "")}</h2>;
-      if (line.startsWith("### ")) return <h3 key={i} className="text-base font-semibold text-[#ddd4f0] mt-5 mb-2">{line.replace("### ", "")}</h3>;
-      if (line.startsWith("- ")) return <li key={i} className="ml-4 text-zinc-300 text-sm list-disc">{line.slice(2)}</li>;
-      if (line.startsWith("---")) return <hr key={i} className="border-zinc-800 my-4" />;
-      if (line.match(/^\*\*.+\*\*$/)) return <p key={i} className="font-semibold text-zinc-200 mt-3">{line.replace(/\*\*/g, "")}</p>;
+      if (line.startsWith("## "))
+        return (
+          <h2 key={i} className="text-xl font-semibold text-[#111111] mt-8 mb-3">
+            {line.replace("## ", "")}
+          </h2>
+        );
+      if (line.startsWith("### "))
+        return (
+          <h3 key={i} className="text-base font-medium text-[#333333] mt-5 mb-2">
+            {line.replace("### ", "")}
+          </h3>
+        );
+      if (line.startsWith("- "))
+        return (
+          <li key={i} className="ml-4 text-[#555555] text-sm list-disc">
+            {line.slice(2)}
+          </li>
+        );
+      if (line.startsWith("---")) return <hr key={i} className="border-[#E5E5E5] my-4" />;
+      if (line.match(/^\*\*.+\*\*$/))
+        return (
+          <p key={i} className="font-semibold text-[#111111] mt-3 text-sm">
+            {line.replace(/\*\*/g, "")}
+          </p>
+        );
       if (line.trim() === "") return <div key={i} className="h-2" />;
-      return <p key={i} className="text-zinc-400 text-sm leading-relaxed">{line.replace(/\*\*/g, "")}</p>;
+      return (
+        <p key={i} className="text-[#555555] text-sm leading-relaxed">
+          {line.replace(/\*\*/g, "")}
+        </p>
+      );
     });
   };
 
   const canGenerate = brief.trim() || files.length > 0 || pdfUrl.trim();
   const figJamApiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://kore.vercel.app/api/figjam-zoning`;
 
-  // ————————————————————————————
-  // VUE ACCUEIL
-  // ————————————————————————————
   if (view === "home") {
     return (
-      <main className="min-h-screen bg-zinc-950 text-zinc-100">
-        <div className="border-b border-zinc-900 px-8 py-5 flex items-center justify-between">
+      <main className="min-h-screen bg-[#FAFAFA] text-[#111111]">
+        <div className="border-b border-[#E5E5E5] bg-white px-8 py-5 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
             <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto" unoptimized />
-            <div className="text-xs text-zinc-600 uppercase tracking-widest">Zoning · Copywriting CRO/SEO</div>
+            <div className="text-xs text-[#6B6B6B] uppercase tracking-widest">Zoning · Copywriting CRO/SEO</div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <input
               type="text"
               value={ngrokUrl}
-              onChange={(e) => { setNgrokUrl(e.target.value); localStorage.setItem("kore-ngrok", e.target.value); }}
+              onChange={(e) => {
+                setNgrokUrl(e.target.value);
+                localStorage.setItem("kore-ngrok", e.target.value);
+              }}
               placeholder="URL ngrok (optionnel)"
-              className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 w-56"
+              className={`${field} w-56 max-w-full text-xs py-2`}
             />
-            <button onClick={createProject} className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
-              + Nouveau projet
+            <button type="button" onClick={createProject} className={btnPrimary}>
+              Nouveau projet
             </button>
           </div>
         </div>
 
         <div className="max-w-3xl mx-auto px-6 py-12">
           <div className="mb-10">
-            <h1 className="text-3xl font-semibold mb-2">Projets</h1>
-            <p className="text-zinc-500 text-sm">Retrouvez tous vos projets clients.</p>
+            <h1 className="text-3xl font-semibold mb-2 text-[#111111]">Projets</h1>
+            <p className="text-[#6B6B6B] text-sm">Retrouvez tous vos projets clients.</p>
           </div>
 
           {loadingProjects ? (
-            <div className="text-center py-24 space-y-4">
-              <div className="text-3xl animate-pulse">✦</div>
-              <p className="text-zinc-500 text-sm">Chargement des projets...</p>
+            <div className="text-center py-24 flex flex-col items-center gap-4">
+              <Spinner className="w-8 h-8" />
+              <p className="text-[#6B6B6B] text-sm">Chargement des projets...</p>
             </div>
           ) : projects.length === 0 ? (
             <div className="text-center py-24 space-y-4">
-              <div className="text-5xl">📁</div>
-              <p className="text-zinc-500">Aucun projet pour l&apos;instant</p>
-              <button onClick={createProject} className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors cursor-pointer">
+              <IconZoning className="w-12 h-12 mx-auto text-[#E5E5E5]" />
+              <p className="text-[#6B6B6B]">Aucun projet pour l&apos;instant</p>
+              <button type="button" onClick={createProject} className={btnPrimary}>
                 Créer mon premier projet
               </button>
             </div>
@@ -529,27 +685,40 @@ export default function Home() {
               {projects.map((project) => (
                 <div
                   key={project.id}
-                  className="group flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-5 hover:border-zinc-600 transition-colors cursor-pointer"
+                  className={`group flex items-center justify-between ${card} cursor-pointer`}
                   onClick={() => openProject(project)}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-[#391754]/50 border border-[#391754]/30 rounded-xl flex items-center justify-center text-[#c4b5e0] text-lg">
-                      {project.copy ? "✅" : project.zoning ? "🗂" : "📝"}
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-10 h-10 shrink-0 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg flex items-center justify-center text-[#111111]">
+                      {project.copy ? (
+                        <span className="text-[#16A34A] text-lg leading-none">✓</span>
+                      ) : project.zoning ? (
+                        <IconZoning className="w-5 h-5" />
+                      ) : (
+                        <IconPen className="w-5 h-5" />
+                      )}
                     </div>
-                    <div>
-                      <div className="font-medium text-zinc-200">{project.name}</div>
-                      <div className="text-xs text-zinc-600 mt-0.5 flex items-center gap-3">
+                    <div className="min-w-0">
+                      <div className="font-medium text-[#111111] truncate">{project.name}</div>
+                      <div className="text-xs text-[#6B6B6B] mt-0.5 flex flex-wrap items-center gap-3">
                         <span>{new Date(project.createdAt).toLocaleDateString("fr-FR")}</span>
-                        {project.zoning && <span className="text-[#8b6fa8]">Zoning ✓</span>}
-                        {project.copy && <span className="text-green-600">Copy ✓</span>}
-                        {project.miroUrl && <span className="text-blue-600">Miro ✓</span>}
+                        {project.zoning && <span className="text-[#111111]">Zoning ✓</span>}
+                        {project.copy && <span className="text-[#16A34A]">Copy ✓</span>}
+                        {project.miroUrl && <span className="text-[#6B6B6B]">Miro ✓</span>}
                       </div>
                     </div>
                   </div>
                   <button
-                    onClick={(e) => { e.stopPropagation(); deleteProject(project.id); }}
-                    className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 transition-all cursor-pointer text-lg"
-                  >✕</button>
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteProject(project.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 text-[#6B6B6B] hover:text-[#111111] transition-all cursor-pointer p-2 shrink-0"
+                    aria-label="Supprimer le projet"
+                  >
+                    <IconTrash className="w-5 h-5" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -559,22 +728,96 @@ export default function Home() {
     );
   }
 
-  // ————————————————————————————
-  // VUE PROJET
-  // ————————————————————————————
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="border-b border-zinc-900 px-8 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button onClick={() => { setView("home"); fetchProjects(); }} className="text-zinc-600 hover:text-zinc-300 cursor-pointer text-sm">← Projets</button>
-          <div className="w-px h-5 bg-zinc-800" />
+    <main className="min-h-screen bg-[#FAFAFA] text-[#111111]">
+      {figJamNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" role="dialog">
+          <div className="bg-white border border-[#E5E5E5] rounded-xl max-w-lg w-full p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-[#111111] mb-2">Zoning prêt pour FigJam</h3>
+            <p className="text-sm text-[#6B6B6B] mb-4">
+              Dans FigJam, ouvre le plugin Kore et renseigne l&apos;URL et l&apos;ID du projet ci-dessous.
+            </p>
+            <div className="text-xs font-mono bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg p-3 space-y-2 mb-4">
+              <div>
+                <span className="text-[#6B6B6B]">URL : </span>
+                {figJamNotice.apiUrl}
+              </div>
+              <div>
+                <span className="text-[#6B6B6B]">ID : </span>
+                {figJamNotice.projectId}
+              </div>
+            </div>
+            <button type="button" className={btnPrimary} onClick={() => setFigJamNotice(null)}>
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {uxPilotOpen && currentProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" role="dialog">
+          <div className="bg-white border border-[#E5E5E5] rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-lg">
+            <div className="p-6 border-b border-[#E5E5E5] flex items-center justify-between gap-4">
+              <h3 className="text-lg font-semibold text-[#111111] flex items-center gap-2">
+                <IconUxPilot className="w-5 h-5 shrink-0" />
+                Prompt UX Pilot
+              </h3>
+              <button
+                type="button"
+                className="text-[#6B6B6B] hover:text-[#111111] p-1 text-xl leading-none w-8 h-8 flex items-center justify-center"
+                onClick={() => setUxPilotOpen(false)}
+                aria-label="Fermer"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              <pre className="text-xs text-[#555555] whitespace-pre-wrap font-sans bg-[#FAFAFA] border border-[#E5E5E5] rounded-lg p-4 max-h-80 overflow-y-auto">
+                {uxPilotPromptText}
+              </pre>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  className={`${btnPrimary} inline-flex items-center gap-2`}
+                  onClick={() => navigator.clipboard.writeText(uxPilotPromptText)}
+                >
+                  <IconCopy className="w-4 h-4" />
+                  Copier le prompt
+                </button>
+                <a
+                  href="https://uxpilot.ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${btnSecondary} inline-flex items-center gap-2 no-underline`}
+                >
+                  Ouvrir UX Pilot →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="border-b border-[#E5E5E5] bg-white px-8 py-5 flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <button
+            type="button"
+            onClick={() => {
+              setView("home");
+              fetchProjects();
+            }}
+            className="text-sm text-[#6B6B6B] hover:text-[#111111] cursor-pointer shrink-0"
+          >
+            ← Projets
+          </button>
+          <div className="w-px h-5 bg-[#E5E5E5] shrink-0" />
           <div className="flex items-center gap-3 min-w-0">
             <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto shrink-0" unoptimized />
-            <div className="font-semibold text-sm truncate">{currentProject?.name || "Nouveau projet"}</div>
+            <div className="font-semibold text-sm truncate text-[#111111]">{currentProject?.name || "Nouveau projet"}</div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {[
             { key: "brief", label: "Brief" },
             { key: "zoning", label: "Zoning" },
@@ -586,13 +829,23 @@ export default function Home() {
             const isActive = step === s.key;
             return (
               <div key={s.key} className="flex items-center gap-2">
-                <div className={`flex items-center gap-2 text-xs ${isActive ? "text-[#c4b5e0]" : isDone ? "text-zinc-400" : "text-zinc-600"}`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${isDone ? "bg-gradient-to-br from-[#391754] to-[#220D31] border-[#391754] text-white" : isActive ? "border-[#391754] text-[#c4b5e0]" : "border-zinc-700 text-zinc-600"}`}>
+                <div
+                  className={`flex items-center gap-2 text-xs ${isActive ? "text-[#111111] font-medium" : isDone ? "text-[#6B6B6B]" : "text-[#9B9B9B]"}`}
+                >
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      isDone
+                        ? "bg-[#111111] text-white"
+                        : isActive
+                          ? "bg-[#111111] text-white"
+                          : "bg-[#F5F5F5] text-[#6B6B6B] border border-[#E5E5E5]"
+                    }`}
+                  >
                     {isDone ? "✓" : i + 1}
                   </div>
-                  <span>{s.label}</span>
+                  <span className="hidden sm:inline">{s.label}</span>
                 </div>
-                {i < 3 && <div className="w-6 h-px bg-zinc-800" />}
+                {i < 3 && <div className="w-6 h-px bg-[#E5E5E5] hidden sm:block" />}
               </div>
             );
           })}
@@ -600,30 +853,38 @@ export default function Home() {
       </div>
 
       <div className="max-w-3xl mx-auto px-6 py-12 space-y-8">
-        {error && <div className="bg-red-950/50 border border-red-800 rounded-xl p-4 text-red-400 text-sm">{error}</div>}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{error}</div>
+        )}
 
-        {/* ———— ÉTAPE 1 : BRIEF ———— */}
         {step === "brief" && (
           <div className="space-y-8">
             <div>
-              <h1 className="text-3xl font-semibold mb-2">Brief client</h1>
-              <p className="text-zinc-500 text-sm">Renseignez les informations disponibles pour générer le zoning.</p>
+              <h1 className="text-3xl font-semibold mb-2 text-[#111111]">Brief client</h1>
+              <p className="text-[#6B6B6B] text-sm">Renseignez les informations disponibles pour générer le zoning.</p>
             </div>
 
-            {/* Toggle "J'ai déjà un zoning" */}
             <div
               onClick={() => setHasExistingZoning(!hasExistingZoning)}
-              className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors ${hasExistingZoning ? "bg-[#220D31]/40 border-[#391754]/50" : "bg-zinc-900 border-zinc-800 hover:border-zinc-600"}`}
+              className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors ${
+                hasExistingZoning ? "bg-[#F5F5F5] border-[#111111]" : "bg-white border-[#E5E5E5] hover:border-[#111111]"
+              }`}
             >
               <div className="flex items-center gap-3">
-                <span className="text-lg">📄</span>
+                <IconUpload className="w-5 h-5 text-[#6B6B6B]" />
                 <div>
-                  <div className="text-sm font-medium text-zinc-200">J&apos;ai déjà un zoning</div>
-                  <div className="text-xs text-zinc-500">Importer un PDF de zoning existant et passer directement au copywriting</div>
+                  <div className="text-sm font-medium text-[#111111]">J&apos;ai déjà un zoning</div>
+                  <div className="text-xs text-[#6B6B6B]">Importer un PDF de zoning existant et passer directement au copywriting</div>
                 </div>
               </div>
-              <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${hasExistingZoning ? "bg-gradient-to-r from-[#391754] to-[#220D31]" : "bg-zinc-700"}`}>
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${hasExistingZoning ? "translate-x-4" : "translate-x-0"}`} />
+              <div
+                className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 shrink-0 ${
+                  hasExistingZoning ? "bg-[#111111]" : "bg-[#E5E5E5]"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform ${hasExistingZoning ? "translate-x-4" : "translate-x-0"}`}
+                />
               </div>
             </div>
 
@@ -631,35 +892,39 @@ export default function Home() {
               <div className="space-y-4">
                 <div
                   onClick={() => document.getElementById("zoning-pdf-input")?.click()}
-                  className="border-2 border-dashed border-[#391754]/50 hover:border-[#4a1f6a]/50 bg-[#220D31]/30 rounded-xl p-10 text-center cursor-pointer transition-colors"
+                  className="border-2 border-dashed border-[#E5E5E5] hover:border-[#111111] bg-white rounded-xl p-10 text-center cursor-pointer transition-colors"
                 >
-                  <div className="text-3xl mb-3">📎</div>
-                  <div className="text-zinc-400 text-sm">
+                  <IconUpload className="w-8 h-8 mx-auto mb-3 text-[#6B6B6B]" />
+                  <div className="text-[#6B6B6B] text-sm">
                     {zoningPdf ? (
-                      <span className="text-[#c4b5e0] font-medium">📄 {zoningPdf.name}</span>
+                      <span className="text-[#111111] font-medium">{zoningPdf.name}</span>
                     ) : (
-                      <>Glissez votre PDF de zoning ici ou <span className="text-[#c4b5e0] underline">parcourir</span></>
+                      <>
+                        Glissez votre PDF de zoning ici ou <span className="text-[#111111] underline">parcourir</span>
+                      </>
                     )}
                   </div>
-                  <div className="text-zinc-600 text-xs mt-1">PDF du zoning fourni par le client ou l&apos;équipe</div>
+                  <div className="text-[#9B9B9B] text-xs mt-1">PDF du zoning fourni par le client ou l&apos;équipe</div>
                 </div>
-                <input id="zoning-pdf-input" type="file" accept=".pdf" onChange={(e) => setZoningPdf(e.target.files?.[0] || null)} className="hidden" />
+                <input
+                  id="zoning-pdf-input"
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => setZoningPdf(e.target.files?.[0] || null)}
+                  className="hidden"
+                />
 
                 {loadingImportZoning ? (
-                  <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center space-y-4">
-                    <div className="text-2xl animate-pulse">✦</div>
-                    <p className="text-zinc-400 text-sm">Import et reformatage du zoning...</p>
-                    <div className="flex gap-2 justify-center">
-                      {[0, 1, 2].map((i) => (
-                        <div key={i} className="w-2 h-2 bg-[#391754] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                      ))}
-                    </div>
+                  <div className="bg-white border border-[#E5E5E5] rounded-2xl p-8 text-center space-y-4">
+                    <Spinner className="w-8 h-8 mx-auto" />
+                    <p className="text-[#6B6B6B] text-sm">Import et reformatage du zoning...</p>
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={handleImportZoning}
                     disabled={!zoningPdf}
-                    className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-8 py-4 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed w-full"
+                    className={`${btnPrimary} w-full`}
                   >
                     Importer le zoning et passer au copywriting →
                   </button>
@@ -668,73 +933,114 @@ export default function Home() {
             ) : (
               <>
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-widest text-zinc-500">Brief client</label>
-                  <textarea value={brief} onChange={(e) => setBrief(e.target.value)} placeholder={"Secteur d'activité, cibles, objectifs, positionnement, pages souhaitées..."} rows={6} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
+                  <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">Brief client</label>
+                  <textarea
+                    value={brief}
+                    onChange={(e) => setBrief(e.target.value)}
+                    placeholder={"Secteur d'activité, cibles, objectifs, positionnement, pages souhaitées..."}
+                    rows={6}
+                    className={field}
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-widest text-zinc-500">URL du site existant</label>
-                  <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://anciensite-client.fr" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 transition-colors" />
+                  <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">URL du site existant</label>
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="https://anciensite-client.fr"
+                    className={field}
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-widest text-zinc-500">Notes d&apos;entretien</label>
-                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes prises lors du rendez-vous client, verbatims, remarques..." rows={4} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
+                  <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">Notes d&apos;entretien</label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Notes prises lors du rendez-vous client, verbatims, remarques..."
+                    rows={4}
+                    className={field}
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-widest text-zinc-500">Sprints</label>
-                  <textarea value={sprints} onChange={(e) => setSprints(e.target.value)} placeholder={"Sprint 1 : Accueil, Footer\nSprint 2 : Services, À propos\nSprint 3 : Cas clients, Contact"} rows={4} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
-                  <p className="text-xs text-zinc-600">Indiquez les pages par sprint pour que FigJam/Miro les colorie par sprint.</p>
+                  <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">Sprints</label>
+                  <textarea
+                    value={sprints}
+                    onChange={(e) => setSprints(e.target.value)}
+                    placeholder={"Sprint 1 : Accueil, Footer\nSprint 2 : Services, À propos\nSprint 3 : Cas clients, Contact"}
+                    rows={4}
+                    className={field}
+                  />
+                  <p className="text-xs text-[#6B6B6B]">Indiquez les pages par sprint pour que FigJam/Miro les colorie par sprint.</p>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-xs uppercase tracking-widest text-zinc-500">Documents PDF</label>
+                  <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">Documents PDF</label>
                   <div
                     onClick={() => document.getElementById("file-input")?.click()}
-                    onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragging(true);
+                    }}
                     onDragLeave={() => setDragging(false)}
-                    onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
-                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${dragging ? "border-[#391754]/50 bg-[#391754]/10" : "border-zinc-800 hover:border-zinc-600"}`}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragging(false);
+                      handleFiles(e.dataTransfer.files);
+                    }}
+                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+                      dragging ? "border-[#111111] bg-[#F5F5F5]" : "border-[#E5E5E5] hover:border-[#111111] bg-white"
+                    }`}
                   >
-                    <div className="text-2xl mb-2">📎</div>
-                    <div className="text-zinc-500 text-sm">Glissez vos PDFs ici ou <span className="text-[#c4b5e0] underline">parcourir</span></div>
-                    <div className="text-zinc-700 text-xs mt-1">Plaquettes, decks, briefs, présentations...</div>
+                    <IconUpload className="w-6 h-6 mx-auto mb-2 text-[#6B6B6B]" />
+                    <div className="text-[#6B6B6B] text-sm">
+                      Glissez vos PDFs ici ou <span className="text-[#111111] underline">parcourir</span>
+                    </div>
+                    <div className="text-[#9B9B9B] text-xs mt-1">Plaquettes, decks, briefs, présentations...</div>
                   </div>
                   <input id="file-input" type="file" multiple accept=".pdf" onChange={(e) => handleFiles(e.target.files)} className="hidden" />
 
                   {files.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {files.map((f, i) => (
-                        <div key={i} className="flex items-center gap-2 bg-[#391754]/35 border border-[#391754]/30 rounded-lg px-3 py-1.5 text-xs text-[#c4b5e0]">
-                          📄 {f.name}
-                          <button onClick={() => removeFile(i)} className="text-zinc-600 hover:text-zinc-400 cursor-pointer">✕</button>
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#111111]"
+                        >
+                          {f.name}
+                          <button type="button" onClick={() => removeFile(i)} className="text-[#6B6B6B] hover:text-[#111111] cursor-pointer p-0.5" aria-label="Retirer">
+                            <IconTrash className="w-4 h-4" />
+                          </button>
                         </div>
                       ))}
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <label className="text-xs text-zinc-600">Ou coller l&apos;URL d&apos;un PDF en ligne</label>
-                    <input type="url" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} placeholder="https://exemple.fr/plaquette.pdf" className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 transition-colors" />
+                    <label className="text-xs text-[#6B6B6B]">Ou coller l&apos;URL d&apos;un PDF en ligne</label>
+                    <input
+                      type="url"
+                      value={pdfUrl}
+                      onChange={(e) => setPdfUrl(e.target.value)}
+                      placeholder="https://exemple.fr/plaquette.pdf"
+                      className={field}
+                    />
                   </div>
                 </div>
 
                 {loadingZoning ? (
-                  <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-10 space-y-6 text-center">
-                    <div className="text-3xl animate-pulse">✦</div>
+                  <div className="bg-white border border-[#E5E5E5] rounded-2xl p-10 space-y-6 text-center">
+                    <Spinner className="w-10 h-10 mx-auto" />
                     <div>
-                      <h2 className="text-lg font-semibold text-zinc-200">Génération du zoning...</h2>
-                      <p className="text-zinc-500 text-sm mt-1">Cela peut prendre 1 minute</p>
-                    </div>
-                    <div className="flex gap-2 justify-center">
-                      {[0, 1, 2].map((i) => (
-                        <div key={i} className="w-2 h-2 bg-[#391754] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                      ))}
+                      <h2 className="text-lg font-semibold text-[#111111]">Génération du zoning...</h2>
+                      <p className="text-[#6B6B6B] text-sm mt-1">Cela peut prendre 1 minute</p>
                     </div>
                   </div>
                 ) : (
-                  <button onClick={handleGenerateZoning} disabled={!canGenerate} className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-8 py-4 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
+                  <button type="button" onClick={handleGenerateZoning} disabled={!canGenerate} className={btnPrimary}>
                     Générer le zoning →
                   </button>
                 )}
@@ -743,133 +1049,195 @@ export default function Home() {
           </div>
         )}
 
-        {/* ———— ÉTAPE 2 : ZONING ———— */}
         {step === "zoning" && currentProject?.zoning && (
           <div className="space-y-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <h1 className="text-2xl font-semibold">Zoning généré</h1>
-                <p className="text-zinc-500 text-sm mt-1">Relisez et corrigez avant de passer au copywriting.</p>
+                <h1 className="text-2xl font-semibold text-[#111111]">Zoning généré</h1>
+                <p className="text-[#6B6B6B] text-sm mt-1">Relisez et corrigez avant de passer au copywriting.</p>
               </div>
-              <div className="flex gap-3 flex-wrap">
-                <button onClick={() => navigator.clipboard.writeText(currentProject.zoning || "")} className="border border-zinc-800 hover:border-zinc-600 px-4 py-2 rounded-lg text-xs text-zinc-400 transition-colors cursor-pointer">
-                  📋 Copier
+              <div className="flex gap-2 flex-wrap items-center">
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(currentProject.zoning || "")}
+                  className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
+                >
+                  <IconCopy className="w-4 h-4" />
+                  Copier
                 </button>
-                <button onClick={handleExportMiro} disabled={loadingMiro} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed">
-                  {loadingMiro ? "Export..." : "🟦 Exporter vers Miro"}
+                <button
+                  type="button"
+                  onClick={handleExportMiro}
+                  disabled={loadingMiro}
+                  className={`${btnPrimary} inline-flex items-center gap-2 text-xs py-2 disabled:opacity-50`}
+                >
+                  <IconMiro className="w-4 h-4" />
+                  {loadingMiro ? "Export..." : "Zoning Miro"}
                 </button>
-                <button onClick={handleExportFigJam} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer">
-                  🎨 Exporter vers FigJam
+                <button
+                  type="button"
+                  onClick={handleExportFigJam}
+                  className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
+                >
+                  <IconZoning className="w-4 h-4" />
+                  Zoning FigJam
                 </button>
                 {currentProject.miroUrl && (
-                  <a href={currentProject.miroUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 border border-blue-800 text-blue-400 px-4 py-2 rounded-lg text-xs hover:bg-blue-950/30 transition-colors">
+                  <a
+                    href={currentProject.miroUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${btnSecondary} inline-flex items-center gap-1 text-xs py-2 no-underline`}
+                  >
                     Ouvrir Miro →
                   </a>
                 )}
               </div>
             </div>
 
-            <div className="bg-purple-950/20 border border-purple-900/30 rounded-xl p-4 flex items-start gap-3">
-              <span className="text-lg">🎨</span>
+            <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-xl p-4 flex items-start gap-3">
+              <IconFigma className="w-5 h-5 text-[#111111] shrink-0 mt-0.5" />
               <div>
-                <div className="text-purple-400 text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
-                <div className="text-zinc-500 text-xs leading-relaxed">
-                  URL : <span className="text-zinc-300 font-mono">{figJamApiUrl}</span><br />
-                  ID : <span className="text-zinc-300 font-mono">{currentProject.id}</span>
+                <div className="text-[#111111] text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
+                <div className="text-[#6B6B6B] text-xs leading-relaxed">
+                  URL : <span className="text-[#111111] font-mono">{figJamApiUrl}</span>
+                  <br />
+                  ID : <span className="text-[#111111] font-mono">{currentProject.id}</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
+            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-8">
               <div>{renderMarkdown(currentProject.zoning)}</div>
             </div>
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6 space-y-4">
               <div className="flex items-center gap-2">
-                <span className="text-lg">✏️</span>
-                <div className="text-sm font-semibold text-zinc-200">Corriger le zoning</div>
+                <IconPen className="w-5 h-5 text-[#111111]" />
+                <div className="text-sm font-semibold text-[#111111]">Corriger le zoning</div>
               </div>
               {feedbackLoading ? (
-                <div className="text-center py-4">
-                  <div className="text-2xl animate-pulse mb-2">✦</div>
-                  <p className="text-zinc-400 text-sm">Correction en cours...</p>
+                <div className="text-center py-4 flex flex-col items-center gap-2">
+                  <Spinner />
+                  <p className="text-[#6B6B6B] text-sm">Correction en cours...</p>
                 </div>
               ) : (
                 <>
-                  <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder={`Ex: "Ajoute une page Témoignages" ou "Le sprint 2 doit inclure la page Contact"`} rows={3} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
-                  <button onClick={() => { setFeedbackTarget("zoning"); handleFeedback(); }} disabled={!feedback.trim()} className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
+                  <textarea
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder={`Ex: "Ajoute une page Témoignages" ou "Le sprint 2 doit inclure la page Contact"`}
+                    rows={3}
+                    className={field}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFeedbackTarget("zoning");
+                      handleFeedback();
+                    }}
+                    disabled={!feedback.trim()}
+                    className={btnPrimary}
+                  >
                     Envoyer la correction →
                   </button>
                 </>
               )}
             </div>
 
-            <div className="bg-[#220D31]/40 border border-[#391754]/30 rounded-xl p-5 flex items-center justify-between gap-4">
+            <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <div className="text-[#c4b5e0] text-sm font-semibold">Zoning validé ?</div>
-                <div className="text-zinc-500 text-xs mt-1">Passez au brief copywriting pour générer les textes.</div>
+                <div className="text-[#111111] text-sm font-semibold">Zoning validé ?</div>
+                <div className="text-[#6B6B6B] text-xs mt-1">Passez au brief copywriting pour générer les textes.</div>
               </div>
-              <button onClick={() => setStep("copy-brief")} className="bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors cursor-pointer whitespace-nowrap">
+              <button type="button" onClick={() => setStep("copy-brief")} className={`${btnPrimary} whitespace-nowrap shrink-0`}>
                 Brief copywriting →
               </button>
             </div>
           </div>
         )}
 
-        {/* ———— ÉTAPE 3 : BRIEF COPY ———— */}
         {step === "copy-brief" && (
           <div className="space-y-8">
             <div>
-              <h1 className="text-2xl font-semibold">Brief copywriting</h1>
-              <p className="text-zinc-500 text-sm mt-1">Fournissez le brief copy et les mots-clés SEO pour générer les textes.</p>
+              <h1 className="text-2xl font-semibold text-[#111111]">Brief copywriting</h1>
+              <p className="text-[#6B6B6B] text-sm mt-1">Fournissez le brief copy et les mots-clés SEO pour générer les textes.</p>
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs uppercase tracking-widest text-zinc-500">Brief copywriting</label>
-              <textarea value={copyBrief} onChange={(e) => setCopyBrief(e.target.value)} placeholder="Collez ici votre brief copywriting : angle éditorial, ton, cibles, messages clés, éléments de différenciation..." rows={8} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
-              <div onClick={() => document.getElementById("copy-brief-file")?.click()} className="border-2 border-dashed border-zinc-800 hover:border-zinc-600 rounded-xl p-5 text-center cursor-pointer transition-colors">
-                <div className="text-zinc-500 text-sm">📎 Ou uploader le brief en <span className="text-[#c4b5e0] underline">PDF</span></div>
+              <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">Brief copywriting</label>
+              <textarea
+                value={copyBrief}
+                onChange={(e) => setCopyBrief(e.target.value)}
+                placeholder="Collez ici votre brief copywriting : angle éditorial, ton, cibles, messages clés, éléments de différenciation..."
+                rows={8}
+                className={field}
+              />
+              <div
+                onClick={() => document.getElementById("copy-brief-file")?.click()}
+                className="border-2 border-dashed border-[#E5E5E5] hover:border-[#111111] rounded-xl p-5 text-center cursor-pointer transition-colors bg-white"
+              >
+                <div className="text-[#6B6B6B] text-sm inline-flex items-center justify-center gap-2">
+                  <IconUpload className="w-4 h-4" />
+                  Ou uploader le brief en <span className="text-[#111111] underline">PDF</span>
+                </div>
               </div>
               <input id="copy-brief-file" type="file" accept=".pdf" onChange={(e) => setCopyBriefFile(e.target.files?.[0] || null)} className="hidden" />
               {copyBriefFile && (
-                <div className="flex items-center gap-2 bg-[#391754]/35 border border-[#391754]/30 rounded-lg px-3 py-1.5 text-xs text-[#c4b5e0] w-fit">
-                  📄 {copyBriefFile.name}
-                  <button onClick={() => setCopyBriefFile(null)} className="text-zinc-600 hover:text-zinc-400 cursor-pointer">✕</button>
+                <div className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#111111] w-fit">
+                  {copyBriefFile.name}
+                  <button type="button" onClick={() => setCopyBriefFile(null)} className="text-[#6B6B6B] hover:text-[#111111] cursor-pointer" aria-label="Retirer">
+                    <IconTrash className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs uppercase tracking-widest text-zinc-500">Mots-clés SEO</label>
-              <textarea value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="Collez ici vos mots-clés SEO, un par ligne ou séparés par des virgules..." rows={5} className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors" />
-              <div onClick={() => document.getElementById("keywords-file")?.click()} className="border-2 border-dashed border-zinc-800 hover:border-zinc-600 rounded-xl p-5 text-center cursor-pointer transition-colors">
-                <div className="text-zinc-500 text-sm">📎 Ou uploader les mots-clés en <span className="text-[#c4b5e0] underline">CSV</span></div>
+              <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">Mots-clés SEO</label>
+              <textarea
+                value={keywords}
+                onChange={(e) => setKeywords(e.target.value)}
+                placeholder="Collez ici vos mots-clés SEO, un par ligne ou séparés par des virgules..."
+                rows={5}
+                className={field}
+              />
+              <div
+                onClick={() => document.getElementById("keywords-file")?.click()}
+                className="border-2 border-dashed border-[#E5E5E5] hover:border-[#111111] rounded-xl p-5 text-center cursor-pointer transition-colors bg-white"
+              >
+                <div className="text-[#6B6B6B] text-sm inline-flex items-center justify-center gap-2">
+                  <IconUpload className="w-4 h-4" />
+                  Ou uploader les mots-clés en <span className="text-[#111111] underline">CSV</span>
+                </div>
               </div>
               <input id="keywords-file" type="file" accept=".csv" onChange={(e) => setKeywordsFile(e.target.files?.[0] || null)} className="hidden" />
               {keywordsFile && (
-                <div className="flex items-center gap-2 bg-[#391754]/35 border border-[#391754]/30 rounded-lg px-3 py-1.5 text-xs text-[#c4b5e0] w-fit">
-                  📊 {keywordsFile.name}
-                  <button onClick={() => setKeywordsFile(null)} className="text-zinc-600 hover:text-zinc-400 cursor-pointer">✕</button>
+                <div className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#111111] w-fit">
+                  {keywordsFile.name}
+                  <button type="button" onClick={() => setKeywordsFile(null)} className="text-[#6B6B6B] hover:text-[#111111] cursor-pointer" aria-label="Retirer">
+                    <IconTrash className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>
 
-            <div className="flex gap-4">
-              <button onClick={() => setStep("zoning")} className="border border-zinc-800 hover:border-zinc-600 text-zinc-400 font-medium px-6 py-3 rounded-xl text-sm transition-colors cursor-pointer">
+            <div className="flex gap-4 flex-wrap">
+              <button type="button" onClick={() => setStep("zoning")} className={btnSecondary}>
                 ← Retour au zoning
               </button>
               {loadingCopy ? (
-                <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center space-y-3">
-                  <div className="text-2xl animate-pulse">✦</div>
-                  <p className="text-zinc-400 text-sm">Génération du copywriting en cours...</p>
-                  <div className="flex gap-2 justify-center">
-                    {[0, 1, 2].map((i) => (
-                      <div key={i} className="w-2 h-2 bg-[#391754] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                    ))}
-                  </div>
+                <div className="flex-1 bg-white border border-[#E5E5E5] rounded-2xl p-6 text-center space-y-3 min-w-[200px]">
+                  <Spinner className="w-8 h-8 mx-auto" />
+                  <p className="text-[#6B6B6B] text-sm">Génération du copywriting en cours...</p>
                 </div>
               ) : (
-                <button onClick={handleGenerateCopy} disabled={!copyBrief.trim() && !copyBriefFile} className="flex-1 bg-gradient-to-br from-[#391754] to-[#220D31] hover:from-[#4a1f6a] hover:to-[#332040] disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-8 py-3 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
+                <button
+                  type="button"
+                  onClick={handleGenerateCopy}
+                  disabled={!copyBrief.trim() && !copyBriefFile}
+                  className={`${btnPrimary} flex-1 min-w-[200px]`}
+                >
                   Générer le copywriting →
                 </button>
               )}
@@ -877,62 +1245,95 @@ export default function Home() {
           </div>
         )}
 
-        {/* ———— ÉTAPE 4 : COPYWRITING ———— */}
         {step === "copy" && (copyPages.length > 0 || currentProject?.copy) && (
           <div className="space-y-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <h1 className="text-2xl font-semibold">Livrables complets</h1>
-                <p className="text-zinc-500 text-sm mt-1">
+                <h1 className="text-2xl font-semibold text-[#111111]">Livrables complets</h1>
+                <p className="text-[#6B6B6B] text-sm mt-1">
                   {loadingCopy
                     ? `Génération en cours... (${copyPages.filter((p) => p.content).length}/${copyPages.length} pages)`
                     : "Zoning et copywriting prêts."}
                 </p>
               </div>
-              <div className="flex gap-3 flex-wrap">
-                <button
-                  onClick={() => setStep("copy-brief")}
-                  className="border border-zinc-800 hover:border-zinc-600 px-4 py-2 rounded-lg text-xs text-zinc-400 transition-colors cursor-pointer"
-                >
-                  🔄 Regénérer le copy
+              <div className="flex gap-2 flex-wrap items-center">
+                <button type="button" onClick={() => setStep("copy-brief")} className={`${btnSecondary} text-xs py-2`}>
+                  Regénérer le copy
                 </button>
                 {!loadingCopy && (
                   <>
                     <button
+                      type="button"
                       onClick={() => navigator.clipboard.writeText((currentProject?.zoning || "") + "\n\n" + (currentProject?.copy || ""))}
-                      className="border border-zinc-800 hover:border-zinc-600 px-4 py-2 rounded-lg text-xs text-zinc-400 transition-colors cursor-pointer"
+                      className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
                     >
-                      📋 Copier tout
+                      <IconCopy className="w-4 h-4" />
+                      Copier tout
                     </button>
+                    {currentProject?.copy && (
+                      <button
+                        type="button"
+                        onClick={() => setUxPilotOpen(true)}
+                        className={`${btnPrimary} inline-flex items-center gap-2 text-xs py-2`}
+                      >
+                        <IconUxPilot className="w-4 h-4" />
+                        Générer prompt UX Pilot
+                      </button>
+                    )}
                     {currentProject?.miroUrl && (
-                      <a href={currentProject.miroUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 border border-blue-800 text-blue-400 px-4 py-2 rounded-lg text-xs hover:bg-blue-950/30 transition-colors">
-                        🟦 Ouvrir Miro →
+                      <a
+                        href={currentProject.miroUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${btnSecondary} inline-flex items-center gap-1 text-xs py-2 no-underline`}
+                      >
+                        <IconMiro className="w-4 h-4" />
+                        Ouvrir Miro →
                       </a>
                     )}
                     {currentProject?.miroBoardId && (
-                      <button onClick={handleExportCopyToMiro} disabled={loadingMiroCopy} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed">
-                        {loadingMiroCopy ? "Export..." : "🟦 Wireframes Miro"}
+                      <button
+                        type="button"
+                        onClick={handleExportCopyToMiro}
+                        disabled={loadingMiroCopy}
+                        className={`${btnPrimary} inline-flex items-center gap-2 text-xs py-2 disabled:opacity-50`}
+                      >
+                        <IconMiro className="w-4 h-4" />
+                        {loadingMiroCopy ? "Export..." : "Wireframes Miro"}
                       </button>
                     )}
-                    <button onClick={handleExportFigJam} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer">
-                      🎨 Zoning FigJam
-                    </button>
-                    <button onClick={handleExportCopyToFigJam} disabled={loadingFigJamCopy} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer disabled:cursor-not-allowed">
-                      {loadingFigJamCopy ? "Export..." : "✍️ Wireframes FigJam"}
+                    <button
+                      type="button"
+                      onClick={handleExportFigJam}
+                      className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
+                    >
+                      <IconZoning className="w-4 h-4" />
+                      Zoning FigJam
                     </button>
                   </>
                 )}
               </div>
             </div>
 
-            <div className="flex gap-1 bg-zinc-900 p-1 rounded-xl w-fit">
+            <div className="flex gap-1 bg-white border border-[#E5E5E5] p-1 rounded-lg w-fit">
               {(["zoning", "copy"] as const).map((tab) => (
                 <button
                   key={tab}
+                  type="button"
                   onClick={() => setActiveTab(tab)}
-                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${activeTab === tab ? "bg-zinc-800 text-[#c4b5e0]" : "text-zinc-500 hover:text-zinc-300"}`}
+                  className={`px-5 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer inline-flex items-center gap-2 ${
+                    activeTab === tab ? "bg-[#111111] text-white" : "text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F5F5F5]"
+                  }`}
                 >
-                  {tab === "zoning" ? "🗂 Zoning" : "✍️ Copywriting"}
+                  {tab === "zoning" ? (
+                    <>
+                      <IconZoning className="w-4 h-4" /> Zoning
+                    </>
+                  ) : (
+                    <>
+                      <IconPen className="w-4 h-4" /> Copywriting
+                    </>
+                  )}
                 </button>
               ))}
             </div>
@@ -950,18 +1351,14 @@ export default function Home() {
                       onClick={() => isDone && setActiveCopyPage(page.name)}
                       disabled={!isDone}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors
-                ${isActive && isDone ? "bg-[#391754]/40 border-[#391754]/60 text-[#c4b5e0]" : ""}
-                ${!isActive && isDone ? "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600 cursor-pointer" : ""}
-                ${isGenerating ? "bg-zinc-900 border-[#391754]/40 text-zinc-400 cursor-wait" : ""}
-                ${!isDone && !isGenerating ? "bg-zinc-900 border-zinc-800 text-zinc-600 cursor-not-allowed opacity-50" : ""}
-              `}
+                        ${isActive && isDone ? "bg-[#111111] border-[#111111] text-white" : ""}
+                        ${!isActive && isDone ? "bg-white border-[#E5E5E5] text-[#111111] hover:border-[#111111] cursor-pointer" : ""}
+                        ${isGenerating ? "bg-[#F5F5F5] border-[#E5E5E5] text-[#6B6B6B] cursor-wait" : ""}
+                        ${!isDone && !isGenerating ? "bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B] cursor-not-allowed opacity-60" : ""}
+                      `}
                     >
-                      {isGenerating && (
-                        <span className="w-2 h-2 rounded-full bg-[#391754] animate-pulse inline-block" />
-                      )}
-                      {isDone && !isGenerating && (
-                        <span className="text-green-500 text-xs">✓</span>
-                      )}
+                      {isGenerating && <span className="w-2 h-2 rounded-full bg-[#111111] animate-pulse inline-block" />}
+                      {isDone && !isGenerating && <span className="text-[#16A34A] text-xs">✓</span>}
                       {page.name}
                     </button>
                   );
@@ -969,16 +1366,17 @@ export default function Home() {
               </div>
             )}
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
+            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-8">
               {activeTab === "zoning" ? (
                 <>
                   <div className="flex justify-end mb-4">
                     <button
                       type="button"
                       onClick={() => navigator.clipboard.writeText(currentProject?.zoning || "")}
-                      className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                      className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
                     >
-                      📋 Copier
+                      <IconCopy className="w-4 h-4" />
+                      Copier
                     </button>
                   </div>
                   <div>{renderMarkdown(currentProject?.zoning || "")}</div>
@@ -991,17 +1389,18 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={() => navigator.clipboard.writeText(copyPages.find((p) => p.name === activeCopyPage)?.content || "")}
-                          className="text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                          className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
                         >
-                          📋 Copier cette page
+                          <IconCopy className="w-4 h-4" />
+                          Copier cette page
                         </button>
                       </div>
                       {copyPages.find((p) => p.name === activeCopyPage)?.content ? (
                         <div>{renderMarkdown(copyPages.find((p) => p.name === activeCopyPage)?.content || "")}</div>
                       ) : (
-                        <div className="text-center py-12 space-y-3">
-                          <div className="text-2xl animate-pulse">✦</div>
-                          <p className="text-zinc-500 text-sm">Génération en cours...</p>
+                        <div className="text-center py-12 flex flex-col items-center gap-3">
+                          <Spinner className="w-8 h-8" />
+                          <p className="text-[#6B6B6B] text-sm">Génération en cours...</p>
                         </div>
                       )}
                     </>
@@ -1013,27 +1412,31 @@ export default function Home() {
             </div>
 
             {!loadingCopy && (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
+              <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6 space-y-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">✏️</span>
-                  <div className="text-sm font-semibold text-zinc-200">Demander une correction</div>
+                  <IconPen className="w-5 h-5 text-[#111111]" />
+                  <div className="text-sm font-semibold text-[#111111]">Demander une correction</div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {(["zoning", "copy"] as const).map((t) => (
                     <button
                       key={t}
                       type="button"
                       onClick={() => setFeedbackTarget(t)}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${feedbackTarget === t ? "border-[#391754]/50 bg-[#391754]/35 text-[#c4b5e0]" : "border-zinc-800 text-zinc-500 hover:text-zinc-300"}`}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                        feedbackTarget === t
+                          ? "border-[#111111] bg-[#111111] text-white"
+                          : "border-[#E5E5E5] text-[#6B6B6B] hover:text-[#111111] hover:border-[#111111] bg-white"
+                      }`}
                     >
-                      {t === "zoning" ? "🗂 Corriger le zoning" : "✍️ Corriger le copywriting"}
+                      {t === "zoning" ? "Corriger le zoning" : "Corriger le copywriting"}
                     </button>
                   ))}
                 </div>
                 {feedbackLoading ? (
-                  <div className="text-center py-4">
-                    <div className="text-2xl animate-pulse mb-2">✦</div>
-                    <p className="text-zinc-400 text-sm">Correction en cours...</p>
+                  <div className="text-center py-4 flex flex-col items-center gap-2">
+                    <Spinner />
+                    <p className="text-[#6B6B6B] text-sm">Correction en cours...</p>
                   </div>
                 ) : (
                   <>
@@ -1042,14 +1445,9 @@ export default function Home() {
                       onChange={(e) => setFeedback(e.target.value)}
                       placeholder={`Ex: "Le ton est trop formel" ou "Ajoute une page Témoignages"`}
                       rows={3}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#391754]/50 resize-none transition-colors"
+                      className={field}
                     />
-                    <button
-                      type="button"
-                      onClick={handleFeedback}
-                      disabled={!feedback.trim()}
-                      className="bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-200 font-medium px-6 py-2.5 rounded-xl text-sm transition-colors cursor-pointer disabled:cursor-not-allowed"
-                    >
+                    <button type="button" onClick={handleFeedback} disabled={!feedback.trim()} className={btnPrimary}>
                       Envoyer la correction →
                     </button>
                   </>
@@ -1057,13 +1455,14 @@ export default function Home() {
               </div>
             )}
 
-            <div className="bg-purple-950/20 border border-purple-900/30 rounded-xl p-4 flex items-start gap-3">
-              <span className="text-lg">🎨</span>
+            <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-xl p-4 flex items-start gap-3">
+              <IconFigma className="w-5 h-5 text-[#111111] shrink-0 mt-0.5" />
               <div>
-                <div className="text-purple-400 text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
-                <div className="text-zinc-500 text-xs leading-relaxed">
-                  URL : <span className="text-zinc-300 font-mono">{figJamApiUrl}</span><br />
-                  ID : <span className="text-zinc-300 font-mono">{currentProject?.id}</span>
+                <div className="text-[#111111] text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
+                <div className="text-[#6B6B6B] text-xs leading-relaxed">
+                  URL : <span className="text-[#111111] font-mono">{figJamApiUrl}</span>
+                  <br />
+                  ID : <span className="text-[#111111] font-mono">{currentProject?.id}</span>
                 </div>
               </div>
             </div>

@@ -172,7 +172,13 @@ CONTENU SUBSTANTIEL :
 RÈGLES DE STYLE
 ═══════════════════════════════════════
 
-- Phrases courtes. Une idée par phrase. Maximum 20 mots par phrase.
+SOBRIÉTÉ ABSOLUE :
+- Maximum 12 mots par phrase. Toujours.
+- Maximum 3 phrases par sous-titre ou description
+- Un bloc = une idée centrale. Pas deux.
+- Supprimer tout ce qui peut être supprimé sans perdre le sens
+- Si tu peux dire la même chose en moins de mots, fais-le
+
 - Utiliser des virgules pour les listes, jamais de tiret long
 - La tension vient de la structure, pas des mots forts
 - Le "vous" précède toujours le "nous"
@@ -180,6 +186,22 @@ RÈGLES DE STYLE
 - Conviction calme : affirmer sans sur-vendre
 - Ton d'expert qui a déjà vu ce problème cent fois, pas d'un commercial qui pitch
 - Respecter scrupuleusement le tone of voice défini dans le brief
+
+FORMAT CARDS OBLIGATOIRE :
+Quand le zoning indique des cards (bénéfices, services, étapes),
+utilise EXACTEMENT ce format pour chaque card :
+**[Titre de la card]**
+Description : [Une seule phrase. 12 mots max.]
+
+FORMAT TÉMOIGNAGES OBLIGATOIRE :
+**[Prénom, rôle, secteur] :**
+"[Citation courte. Situation avant en une phrase. Résultat en une phrase.]"
+
+COHÉRENCE INTER-PAGES :
+Le zoning complet du site est fourni. Chaque page doit :
+- Utiliser un vocabulaire cohérent avec les autres pages
+- Ne pas répéter les mêmes tournures d'une page à l'autre
+- Progresser dans l'argument : chaque page approfondit ce que la précédente a posé
 
 FORMAT OBLIGATOIRE :
 - Pages : ## NOM DE LA PAGE
