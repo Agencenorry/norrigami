@@ -208,9 +208,12 @@ export default function Home() {
 
   const [error, setError] = useState<string | null>(null);
 
-  const [feedback, setFeedback] = useState("");
-  const [feedbackTarget, setFeedbackTarget] = useState<"zoning" | "copy">("zoning");
-  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{ role: "user" | "assistant"; content: string; files?: string[] }[]>(
+    []
+  );
+  const [chatInput, setChatInput] = useState("");
+  const [chatFiles, setChatFiles] = useState<File[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"zoning" | "copy">("zoning");
 
@@ -574,31 +577,157 @@ export default function Home() {
     }
   };
 
-  const handleFeedback = async () => {
-    if (!feedback.trim() || !currentProject) return;
-    setFeedbackLoading(true);
-    const current = feedbackTarget === "zoning" ? currentProject.zoning : currentProject.copy;
-    const systemPrompt =
-      feedbackTarget === "zoning"
-        ? "Tu es un expert en architecture web et UX. Tu vas corriger et améliorer un zoning de site web selon les instructions données."
-        : "Tu es un expert en copywriting CRO, SEO et GEO. Tu vas corriger et améliorer un copywriting de site web selon les instructions données.";
+  const handleChat = async () => {
+    if (!chatInput.trim() && chatFiles.length === 0) return;
+    if (!currentProject) return;
+    const userMessage = {
+      role: "user" as const,
+      content: chatInput,
+      files: chatFiles.map((f) => f.name),
+    };
+    setChatMessages((prev) => [...prev, userMessage]);
+    const inputSnapshot = chatInput;
+    const filesSnapshot = [...chatFiles];
+    setChatInput("");
+    setChatFiles([]);
+    setChatLoading(true);
     try {
-      const response = await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ current, feedback, systemPrompt, brief, notes, url }),
-      });
+      const formData = new FormData();
+      formData.append("message", inputSnapshot);
+      formData.append("zoning", currentProject.zoning || "");
+      formData.append("copy", currentProject.copy || "");
+      formData.append("history", JSON.stringify(chatMessages));
+      filesSnapshot.forEach((f) => formData.append("files", f));
+      const response = await fetch("/api/chat", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      if (feedbackTarget === "zoning") await updateProject({ zoning: data.result });
-      else await updateProject({ copy: data.result });
-      setFeedback("");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      setChatMessages((prev) => [...prev, { role: "assistant", content: data.message || "" }]);
+      if (data.updatedZoning) await updateProject({ zoning: data.updatedZoning });
+      if (data.updatedCopy) await updateProject({ copy: data.updatedCopy });
+    } catch (err) {
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Erreur : " + (err instanceof Error ? err.message : "Inconnue"),
+        },
+      ]);
     } finally {
-      setFeedbackLoading(false);
+      setChatLoading(false);
     }
   };
+
+  const renderCorrectionChat = () => (
+    <div className="bg-white border border-[#E5E5E5] rounded-2xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <IconPen className="w-4 h-4 text-[#220D31]" />
+          <span className="text-sm font-semibold text-[#220D31]">Demander une correction</span>
+        </div>
+        {chatMessages.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setChatMessages([])}
+            className="text-xs text-[#6B6B6B] hover:text-[#220D31]"
+          >
+            Effacer
+          </button>
+        )}
+      </div>
+      {chatMessages.length > 0 && (
+        <div className="px-6 py-4 space-y-4 max-h-96 overflow-y-auto">
+          {chatMessages.map((msg, i) => (
+            <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                className={`max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
+                  msg.role === "user" ? "bg-[#220D31] text-white" : "bg-[#F5F5F5] text-[#220D31]"
+                }`}
+              >
+                {msg.content}
+                {msg.files && msg.files.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {msg.files.map((f, fi) => (
+                      <span key={fi} className="text-xs opacity-70 bg-white/20 rounded px-2 py-0.5">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          {chatLoading && (
+            <div className="flex justify-start">
+              <div className="bg-[#F5F5F5] rounded-xl px-4 py-3">
+                <Spinner className="w-4 h-4" />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      <div className="px-6 py-4 space-y-3">
+        {chatFiles.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {chatFiles.map((f, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-1.5 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31]"
+              >
+                {f.name}
+                <button
+                  type="button"
+                  onClick={() => setChatFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                  className="text-[#6B6B6B] hover:text-[#220D31]"
+                >
+                  <IconTrash className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2 items-end">
+          <textarea
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleChat();
+              }
+            }}
+            placeholder='Ex: "Rends le ton plus direct" ou colle les retours du client...'
+            rows={2}
+            className={field}
+          />
+          <div className="flex gap-2 shrink-0">
+            <label className={`${btnSecondary} cursor-pointer inline-flex items-center gap-1 py-2 px-3`}>
+              <IconUpload className="w-4 h-4" />
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.txt"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files) setChatFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+                }}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={handleChat}
+              disabled={(!chatInput.trim() && chatFiles.length === 0) || chatLoading}
+              className={btnPrimary}
+            >
+              →
+            </button>
+          </div>
+        </div>
+        <p className="text-xs text-[#6B6B6B]">
+          Entrée pour envoyer · Shift+Entrée pour saut de ligne · Upload pour partager les retours client
+        </p>
+      </div>
+    </div>
+  );
 
   const renderMarkdown = (text: string) => {
     return text.split("\n").map((line, i) => {
@@ -1112,39 +1241,7 @@ export default function Home() {
               <div>{renderMarkdown(currentProject.zoning)}</div>
             </div>
 
-            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6 space-y-4">
-              <div className="flex items-center gap-2">
-                <IconPen className="w-5 h-5 text-[#220D31]" />
-                <div className="text-sm font-semibold text-[#220D31]">Corriger le zoning</div>
-              </div>
-              {feedbackLoading ? (
-                <div className="text-center py-4 flex flex-col items-center gap-2">
-                  <Spinner />
-                  <p className="text-[#6B6B6B] text-sm">Correction en cours...</p>
-                </div>
-              ) : (
-                <>
-                  <textarea
-                    value={feedback}
-                    onChange={(e) => setFeedback(e.target.value)}
-                    placeholder={`Ex: "Ajoute une page Témoignages" ou "Le sprint 2 doit inclure la page Contact"`}
-                    rows={3}
-                    className={field}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFeedbackTarget("zoning");
-                      handleFeedback();
-                    }}
-                    disabled={!feedback.trim()}
-                    className={btnPrimary}
-                  >
-                    Envoyer la correction →
-                  </button>
-                </>
-              )}
-            </div>
+            {renderCorrectionChat()}
 
             <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
@@ -1414,49 +1511,7 @@ export default function Home() {
               )}
             </div>
 
-            {!loadingCopy && (
-              <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6 space-y-4">
-                <div className="flex items-center gap-2">
-                  <IconPen className="w-5 h-5 text-[#220D31]" />
-                  <div className="text-sm font-semibold text-[#220D31]">Demander une correction</div>
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  {(["zoning", "copy"] as const).map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setFeedbackTarget(t)}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
-                        feedbackTarget === t
-                          ? "border-[#2E1343] bg-[#2E1343] text-white"
-                          : "border-[#E5E5E5] text-[#6B6B6B] hover:text-[#220D31] hover:border-[#2E1343] bg-white"
-                      }`}
-                    >
-                      {t === "zoning" ? "Corriger le zoning" : "Corriger le copywriting"}
-                    </button>
-                  ))}
-                </div>
-                {feedbackLoading ? (
-                  <div className="text-center py-4 flex flex-col items-center gap-2">
-                    <Spinner />
-                    <p className="text-[#6B6B6B] text-sm">Correction en cours...</p>
-                  </div>
-                ) : (
-                  <>
-                    <textarea
-                      value={feedback}
-                      onChange={(e) => setFeedback(e.target.value)}
-                      placeholder={`Ex: "Le ton est trop formel" ou "Ajoute une page Témoignages"`}
-                      rows={3}
-                      className={field}
-                    />
-                    <button type="button" onClick={handleFeedback} disabled={!feedback.trim()} className={btnPrimary}>
-                      Envoyer la correction →
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
+            {!loadingCopy && renderCorrectionChat()}
 
             <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-xl p-4 flex items-start gap-3">
               <IconFigma className="w-5 h-5 text-[#220D31] shrink-0 mt-0.5" />
