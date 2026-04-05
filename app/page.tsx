@@ -167,9 +167,9 @@ function extractPages(zoning: string): { name: string; content: string }[] {
 const btnPrimary =
   "bg-[#2E1343] text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#3d1a5a] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
 const btnSecondary =
-  "bg-white border border-[#E5E5E5] text-[#111111] rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#F5F5F5] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+  "bg-white border border-[#E5E5E5] text-[#220D31] rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#F5F5F5] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
 const field =
-  "w-full bg-white border border-[#E5E5E5] rounded-lg p-3 text-sm text-[#111111] placeholder-[#9B9B9B] focus:outline-none focus:border-[#2E1343] resize-none transition-colors";
+  "w-full bg-white border border-[#E5E5E5] rounded-lg p-3 text-sm text-[#220D31] placeholder-[#9B9B9B] focus:outline-none focus:border-[#2E1343] resize-none transition-colors";
 const card = "bg-white border border-[#E5E5E5] rounded-xl p-5 hover:border-[#2E1343] transition-colors";
 
 export default function Home() {
@@ -604,7 +604,7 @@ export default function Home() {
     return text.split("\n").map((line, i) => {
       if (line.startsWith("## "))
         return (
-          <h2 key={i} className="text-xl font-semibold text-[#111111] mt-8 mb-3">
+          <h2 key={i} className="text-xl font-semibold text-[#220D31] mt-8 mb-3">
             {line.replace("## ", "")}
           </h2>
         );
@@ -623,7 +623,7 @@ export default function Home() {
       if (line.startsWith("---")) return <hr key={i} className="border-[#E5E5E5] my-4" />;
       if (line.match(/^\*\*.+\*\*$/))
         return (
-          <p key={i} className="font-semibold text-[#111111] mt-3 text-sm">
+          <p key={i} className="font-semibold text-[#220D31] mt-3 text-sm">
             {line.replace(/\*\*/g, "")}
           </p>
         );
@@ -641,22 +641,20 @@ export default function Home() {
 
   if (view === "home") {
     return (
-      <main className="min-h-screen bg-[#FAFAFA] text-[#111111]">
-        <div className="border-b border-[#E5E5E5] bg-white px-8 py-5 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto" unoptimized />
-            <div className="text-xs text-[#6B6B6B] uppercase tracking-widest">Zoning · Copywriting CRO/SEO</div>
+      <main className="min-h-screen bg-[#FAFAFA] text-[#220D31]">
+        <div className="border-b border-[#E5E5E5] bg-white px-8 py-5 flex items-center justify-between relative">
+          <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto" unoptimized />
+          <div className="absolute left-1/2 -translate-x-1/2 text-xs text-[#6B6B6B] uppercase tracking-widest">
+            Zoning · Copywriting CRO/SEO
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <button type="button" onClick={createProject} className={btnPrimary}>
-              Nouveau projet
-            </button>
-          </div>
+          <button type="button" onClick={createProject} className={btnPrimary}>
+            Nouveau projet
+          </button>
         </div>
 
         <div className="max-w-3xl mx-auto px-6 py-12">
           <div className="mb-10">
-            <h1 className="text-3xl font-semibold mb-2 text-[#111111]">Projets</h1>
+            <h1 className="text-3xl font-semibold mb-2 text-[#220D31]">Projets</h1>
             <p className="text-[#6B6B6B] text-sm">Retrouvez tous vos projets clients.</p>
           </div>
 
@@ -682,7 +680,7 @@ export default function Home() {
                   onClick={() => openProject(project)}
                 >
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-10 h-10 shrink-0 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg flex items-center justify-center text-[#111111]">
+                    <div className="w-10 h-10 shrink-0 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg flex items-center justify-center text-[#220D31]">
                       {project.copy ? (
                         <span className="text-[#16A34A] text-lg leading-none">✓</span>
                       ) : project.zoning ? (
@@ -692,7 +690,7 @@ export default function Home() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-medium text-[#111111] truncate">{project.name}</div>
+                      <div className="font-medium text-[#220D31] truncate">{project.name}</div>
                       <div className="text-xs text-[#6B6B6B] mt-0.5 flex flex-wrap items-center gap-3">
                         <span>{new Date(project.createdAt).toLocaleDateString("fr-FR")}</span>
                         {project.zoning && <span className="text-[#2E1343]">Zoning ✓</span>}
@@ -707,7 +705,7 @@ export default function Home() {
                       e.stopPropagation();
                       deleteProject(project.id);
                     }}
-                    className="opacity-0 group-hover:opacity-100 text-[#6B6B6B] hover:text-[#111111] transition-all cursor-pointer p-2 shrink-0"
+                    className="opacity-0 group-hover:opacity-100 text-[#6B6B6B] hover:text-[#220D31] transition-all cursor-pointer p-2 shrink-0"
                     aria-label="Supprimer le projet"
                   >
                     <IconTrash className="w-5 h-5" />
@@ -722,11 +720,11 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FAFAFA] text-[#111111]">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#220D31]">
       {figJamNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" role="dialog">
           <div className="bg-white border border-[#E5E5E5] rounded-xl max-w-lg w-full p-6 shadow-lg">
-            <h3 className="text-lg font-semibold text-[#111111] mb-2">Zoning prêt pour FigJam</h3>
+            <h3 className="text-lg font-semibold text-[#220D31] mb-2">Zoning prêt pour FigJam</h3>
             <p className="text-sm text-[#6B6B6B] mb-4">
               Dans FigJam, ouvre le plugin Kore et renseigne l&apos;URL et l&apos;ID du projet ci-dessous.
             </p>
@@ -751,13 +749,13 @@ export default function Home() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" role="dialog">
           <div className="bg-white border border-[#E5E5E5] rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-lg">
             <div className="p-6 border-b border-[#E5E5E5] flex items-center justify-between gap-4">
-              <h3 className="text-lg font-semibold text-[#111111] flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-[#220D31] flex items-center gap-2">
                 <IconUxPilot className="w-5 h-5 shrink-0" />
                 Prompt UX Pilot
               </h3>
               <button
                 type="button"
-                className="text-[#6B6B6B] hover:text-[#111111] p-1 text-xl leading-none w-8 h-8 flex items-center justify-center"
+                className="text-[#6B6B6B] hover:text-[#220D31] p-1 text-xl leading-none w-8 h-8 flex items-center justify-center"
                 onClick={() => setUxPilotOpen(false)}
                 aria-label="Fermer"
               >
@@ -791,7 +789,7 @@ export default function Home() {
         </div>
       )}
 
-      <div className="border-b border-[#E5E5E5] bg-white px-8 py-5 flex items-center justify-between flex-wrap gap-4">
+      <div className="border-b border-[#E5E5E5] bg-white px-8 py-5 flex items-center justify-between relative">
         <div className="flex items-center gap-4 min-w-0">
           <button
             type="button"
@@ -799,18 +797,20 @@ export default function Home() {
               setView("home");
               fetchProjects();
             }}
-            className="text-sm text-[#6B6B6B] hover:text-[#111111] cursor-pointer shrink-0"
+            className="text-sm text-[#6B6B6B] hover:text-[#220D31] cursor-pointer shrink-0"
           >
             ← Projets
           </button>
           <div className="w-px h-5 bg-[#E5E5E5] shrink-0" />
           <div className="flex items-center gap-3 min-w-0">
             <Image src="/Group_2.svg" alt="Kore" width={160} height={32} className="h-8 w-auto shrink-0" unoptimized />
-            <div className="font-semibold text-sm truncate text-[#111111]">{currentProject?.name || "Nouveau projet"}</div>
+            <div className="font-semibold text-sm truncate text-[#220D31]">{currentProject?.name || "Nouveau projet"}</div>
           </div>
         </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="absolute left-1/2 -translate-x-1/2 text-xs text-[#6B6B6B] uppercase tracking-widest pointer-events-none">
+          Zoning · Copywriting CRO/SEO
+        </div>
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
           {[
             { key: "brief", label: "Brief" },
             { key: "zoning", label: "Zoning" },
@@ -823,7 +823,7 @@ export default function Home() {
             return (
               <div key={s.key} className="flex items-center gap-2">
                 <div
-                  className={`flex items-center gap-2 text-xs ${isActive ? "text-[#111111] font-medium" : isDone ? "text-[#6B6B6B]" : "text-[#9B9B9B]"}`}
+                  className={`flex items-center gap-2 text-xs ${isActive ? "text-[#220D31] font-medium" : isDone ? "text-[#6B6B6B]" : "text-[#9B9B9B]"}`}
                 >
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -853,7 +853,7 @@ export default function Home() {
         {step === "brief" && (
           <div className="space-y-8">
             <div>
-              <h1 className="text-3xl font-semibold mb-2 text-[#111111]">Brief client</h1>
+              <h1 className="text-3xl font-semibold mb-2 text-[#220D31]">Brief client</h1>
               <p className="text-[#6B6B6B] text-sm">Renseignez les informations disponibles pour générer le zoning.</p>
             </div>
 
@@ -866,7 +866,7 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <IconUpload className="w-5 h-5 text-[#6B6B6B]" />
                 <div>
-                  <div className="text-sm font-medium text-[#111111]">J&apos;ai déjà un zoning</div>
+                  <div className="text-sm font-medium text-[#220D31]">J&apos;ai déjà un zoning</div>
                   <div className="text-xs text-[#6B6B6B]">Importer un PDF de zoning existant et passer directement au copywriting</div>
                 </div>
               </div>
@@ -890,10 +890,10 @@ export default function Home() {
                   <IconUpload className="w-8 h-8 mx-auto mb-3 text-[#6B6B6B]" />
                   <div className="text-[#6B6B6B] text-sm">
                     {zoningPdf ? (
-                      <span className="text-[#111111] font-medium">{zoningPdf.name}</span>
+                      <span className="text-[#220D31] font-medium">{zoningPdf.name}</span>
                     ) : (
                       <>
-                        Glissez votre PDF de zoning ici ou <span className="text-[#111111] underline">parcourir</span>
+                        Glissez votre PDF de zoning ici ou <span className="text-[#220D31] underline">parcourir</span>
                       </>
                     )}
                   </div>
@@ -990,7 +990,7 @@ export default function Home() {
                   >
                     <IconUpload className="w-6 h-6 mx-auto mb-2 text-[#6B6B6B]" />
                     <div className="text-[#6B6B6B] text-sm">
-                      Glissez vos PDFs ici ou <span className="text-[#111111] underline">parcourir</span>
+                      Glissez vos PDFs ici ou <span className="text-[#220D31] underline">parcourir</span>
                     </div>
                     <div className="text-[#9B9B9B] text-xs mt-1">Plaquettes, decks, briefs, présentations...</div>
                   </div>
@@ -1001,10 +1001,10 @@ export default function Home() {
                       {files.map((f, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#111111]"
+                          className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31]"
                         >
                           {f.name}
-                          <button type="button" onClick={() => removeFile(i)} className="text-[#6B6B6B] hover:text-[#111111] cursor-pointer p-0.5" aria-label="Retirer">
+                          <button type="button" onClick={() => removeFile(i)} className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer p-0.5" aria-label="Retirer">
                             <IconTrash className="w-4 h-4" />
                           </button>
                         </div>
@@ -1028,7 +1028,7 @@ export default function Home() {
                   <div className="bg-white border border-[#E5E5E5] rounded-2xl p-10 space-y-6 text-center">
                     <Spinner className="w-10 h-10 mx-auto" />
                     <div>
-                      <h2 className="text-lg font-semibold text-[#111111]">Génération du zoning...</h2>
+                      <h2 className="text-lg font-semibold text-[#220D31]">Génération du zoning...</h2>
                       <p className="text-[#6B6B6B] text-sm mt-1">Cela peut prendre 1 minute</p>
                     </div>
                   </div>
@@ -1046,7 +1046,7 @@ export default function Home() {
           <div className="space-y-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <h1 className="text-2xl font-semibold text-[#111111]">Zoning généré</h1>
+                <h1 className="text-2xl font-semibold text-[#220D31]">Zoning généré</h1>
                 <p className="text-[#6B6B6B] text-sm mt-1">Relisez et corrigez avant de passer au copywriting.</p>
               </div>
               <div className="flex gap-2 flex-wrap items-center">
@@ -1089,13 +1089,13 @@ export default function Home() {
             </div>
 
             <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-xl p-4 flex items-start gap-3">
-              <IconFigma className="w-5 h-5 text-[#111111] shrink-0 mt-0.5" />
+              <IconFigma className="w-5 h-5 text-[#220D31] shrink-0 mt-0.5" />
               <div>
-                <div className="text-[#111111] text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
+                <div className="text-[#220D31] text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
                 <div className="text-[#6B6B6B] text-xs leading-relaxed">
-                  URL : <span className="text-[#111111] font-mono">{figJamApiUrl}</span>
+                  URL : <span className="text-[#220D31] font-mono">{figJamApiUrl}</span>
                   <br />
-                  ID : <span className="text-[#111111] font-mono">{currentProject.id}</span>
+                  ID : <span className="text-[#220D31] font-mono">{currentProject.id}</span>
                 </div>
               </div>
             </div>
@@ -1106,8 +1106,8 @@ export default function Home() {
 
             <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6 space-y-4">
               <div className="flex items-center gap-2">
-                <IconPen className="w-5 h-5 text-[#111111]" />
-                <div className="text-sm font-semibold text-[#111111]">Corriger le zoning</div>
+                <IconPen className="w-5 h-5 text-[#220D31]" />
+                <div className="text-sm font-semibold text-[#220D31]">Corriger le zoning</div>
               </div>
               {feedbackLoading ? (
                 <div className="text-center py-4 flex flex-col items-center gap-2">
@@ -1140,7 +1140,7 @@ export default function Home() {
 
             <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <div className="text-[#111111] text-sm font-semibold">Zoning validé ?</div>
+                <div className="text-[#220D31] text-sm font-semibold">Zoning validé ?</div>
                 <div className="text-[#6B6B6B] text-xs mt-1">Passez au brief copywriting pour générer les textes.</div>
               </div>
               <button type="button" onClick={() => setStep("copy-brief")} className={`${btnPrimary} whitespace-nowrap shrink-0`}>
@@ -1153,7 +1153,7 @@ export default function Home() {
         {step === "copy-brief" && (
           <div className="space-y-8">
             <div>
-              <h1 className="text-2xl font-semibold text-[#111111]">Brief copywriting</h1>
+              <h1 className="text-2xl font-semibold text-[#220D31]">Brief copywriting</h1>
               <p className="text-[#6B6B6B] text-sm mt-1">Fournissez le brief copy et les mots-clés SEO pour générer les textes.</p>
             </div>
 
@@ -1172,14 +1172,14 @@ export default function Home() {
               >
                 <div className="text-[#6B6B6B] text-sm inline-flex items-center justify-center gap-2">
                   <IconUpload className="w-4 h-4" />
-                  Ou uploader le brief en <span className="text-[#111111] underline">PDF</span>
+                  Ou uploader le brief en <span className="text-[#220D31] underline">PDF</span>
                 </div>
               </div>
               <input id="copy-brief-file" type="file" accept=".pdf" onChange={(e) => setCopyBriefFile(e.target.files?.[0] || null)} className="hidden" />
               {copyBriefFile && (
-                <div className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#111111] w-fit">
+                <div className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31] w-fit">
                   {copyBriefFile.name}
-                  <button type="button" onClick={() => setCopyBriefFile(null)} className="text-[#6B6B6B] hover:text-[#111111] cursor-pointer" aria-label="Retirer">
+                  <button type="button" onClick={() => setCopyBriefFile(null)} className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer" aria-label="Retirer">
                     <IconTrash className="w-4 h-4" />
                   </button>
                 </div>
@@ -1201,14 +1201,14 @@ export default function Home() {
               >
                 <div className="text-[#6B6B6B] text-sm inline-flex items-center justify-center gap-2">
                   <IconUpload className="w-4 h-4" />
-                  Ou uploader les mots-clés en <span className="text-[#111111] underline">CSV</span>
+                  Ou uploader les mots-clés en <span className="text-[#220D31] underline">CSV</span>
                 </div>
               </div>
               <input id="keywords-file" type="file" accept=".csv" onChange={(e) => setKeywordsFile(e.target.files?.[0] || null)} className="hidden" />
               {keywordsFile && (
-                <div className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#111111] w-fit">
+                <div className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31] w-fit">
                   {keywordsFile.name}
-                  <button type="button" onClick={() => setKeywordsFile(null)} className="text-[#6B6B6B] hover:text-[#111111] cursor-pointer" aria-label="Retirer">
+                  <button type="button" onClick={() => setKeywordsFile(null)} className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer" aria-label="Retirer">
                     <IconTrash className="w-4 h-4" />
                   </button>
                 </div>
@@ -1242,7 +1242,7 @@ export default function Home() {
           <div className="space-y-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
-                <h1 className="text-2xl font-semibold text-[#111111]">Livrables complets</h1>
+                <h1 className="text-2xl font-semibold text-[#220D31]">Livrables complets</h1>
                 <p className="text-[#6B6B6B] text-sm mt-1">
                   {loadingCopy
                     ? `Génération en cours... (${copyPages.filter((p) => p.content).length}/${copyPages.length} pages)`
@@ -1315,7 +1315,7 @@ export default function Home() {
                   type="button"
                   onClick={() => setActiveTab(tab)}
                   className={`px-5 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer inline-flex items-center gap-2 ${
-                    activeTab === tab ? "bg-[#2E1343] text-white" : "text-[#6B6B6B] hover:text-[#111111] hover:bg-[#F5F5F5]"
+                    activeTab === tab ? "bg-[#2E1343] text-white" : "text-[#6B6B6B] hover:text-[#220D31] hover:bg-[#F5F5F5]"
                   }`}
                 >
                   {tab === "zoning" ? (
@@ -1345,7 +1345,7 @@ export default function Home() {
                       disabled={!isDone}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors
                         ${isActive && isDone ? "bg-[#2E1343] border-[#2E1343] text-white" : ""}
-                        ${!isActive && isDone ? "bg-white border-[#E5E5E5] text-[#111111] hover:border-[#2E1343] cursor-pointer" : ""}
+                        ${!isActive && isDone ? "bg-white border-[#E5E5E5] text-[#220D31] hover:border-[#2E1343] cursor-pointer" : ""}
                         ${isGenerating ? "bg-[#F5F5F5] border-[#E5E5E5] text-[#6B6B6B] cursor-wait" : ""}
                         ${!isDone && !isGenerating ? "bg-[#F5F5F5] border-[#E5E5E5] text-[#9B9B9B] cursor-not-allowed opacity-60" : ""}
                       `}
@@ -1407,8 +1407,8 @@ export default function Home() {
             {!loadingCopy && (
               <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6 space-y-4">
                 <div className="flex items-center gap-2">
-                  <IconPen className="w-5 h-5 text-[#111111]" />
-                  <div className="text-sm font-semibold text-[#111111]">Demander une correction</div>
+                  <IconPen className="w-5 h-5 text-[#220D31]" />
+                  <div className="text-sm font-semibold text-[#220D31]">Demander une correction</div>
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   {(["zoning", "copy"] as const).map((t) => (
@@ -1419,7 +1419,7 @@ export default function Home() {
                       className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
                         feedbackTarget === t
                           ? "border-[#2E1343] bg-[#2E1343] text-white"
-                          : "border-[#E5E5E5] text-[#6B6B6B] hover:text-[#111111] hover:border-[#2E1343] bg-white"
+                          : "border-[#E5E5E5] text-[#6B6B6B] hover:text-[#220D31] hover:border-[#2E1343] bg-white"
                       }`}
                     >
                       {t === "zoning" ? "Corriger le zoning" : "Corriger le copywriting"}
@@ -1449,13 +1449,13 @@ export default function Home() {
             )}
 
             <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-xl p-4 flex items-start gap-3">
-              <IconFigma className="w-5 h-5 text-[#111111] shrink-0 mt-0.5" />
+              <IconFigma className="w-5 h-5 text-[#220D31] shrink-0 mt-0.5" />
               <div>
-                <div className="text-[#111111] text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
+                <div className="text-[#220D31] text-xs font-semibold uppercase tracking-widest mb-1">Plugin FigJam</div>
                 <div className="text-[#6B6B6B] text-xs leading-relaxed">
-                  URL : <span className="text-[#111111] font-mono">{figJamApiUrl}</span>
+                  URL : <span className="text-[#220D31] font-mono">{figJamApiUrl}</span>
                   <br />
-                  ID : <span className="text-[#111111] font-mono">{currentProject?.id}</span>
+                  ID : <span className="text-[#220D31] font-mono">{currentProject?.id}</span>
                 </div>
               </div>
             </div>
