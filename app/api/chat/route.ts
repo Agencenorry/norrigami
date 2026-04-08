@@ -64,13 +64,24 @@ ${copy || "Pas encore généré"}`;
       .map((b) => (b.type === "text" ? b.text : ""))
       .join("\n")
       .trim();
-    try {
-      const clean = text.replace(/```json\n?|\n?```/g, "").trim();
-      const parsed = JSON.parse(clean);
-      return NextResponse.json(parsed);
-    } catch {
-      return NextResponse.json({ message: text });
+
+    // Chercher un bloc JSON dans la réponse même si entouré de texte
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.updatedZoning || parsed.updatedCopy || parsed.message) {
+          return NextResponse.json({
+            message: parsed.message || "",
+            updatedZoning: parsed.updatedZoning || null,
+            updatedCopy: parsed.updatedCopy || null,
+          });
+        }
+      } catch (e) {
+        console.error("JSON parse error:", e);
+      }
     }
+    return NextResponse.json({ message: text });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

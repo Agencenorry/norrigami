@@ -601,12 +601,15 @@ export default function Home() {
       const response = await fetch("/api/chat", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      const assistantMessage =
-        data.message ||
-        (data.updatedZoning ? "Zoning mis à jour ✓" : "") ||
-        (data.updatedCopy ? "Copy mis à jour ✓" : "") ||
-        "Fait.";
+      const assistantMessage = data.message && !data.message.startsWith("{")
+        ? data.message
+        : data.updatedZoning
+          ? "Zoning mis à jour ✓"
+          : data.updatedCopy
+            ? "Copy mis à jour ✓"
+            : data.message || "Fait.";
       setChatMessages((prev) => [...prev, { role: "assistant", content: assistantMessage }]);
+
       if (data.updatedZoning) await updateProject({ zoning: data.updatedZoning });
       if (data.updatedCopy) await updateProject({ copy: data.updatedCopy });
     } catch (err) {
