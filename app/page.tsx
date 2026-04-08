@@ -601,7 +601,12 @@ export default function Home() {
       const response = await fetch("/api/chat", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      setChatMessages((prev) => [...prev, { role: "assistant", content: data.message || "" }]);
+      const assistantMessage =
+        data.message ||
+        (data.updatedZoning ? "Zoning mis à jour ✓" : "") ||
+        (data.updatedCopy ? "Copy mis à jour ✓" : "") ||
+        "Fait.";
+      setChatMessages((prev) => [...prev, { role: "assistant", content: assistantMessage }]);
       if (data.updatedZoning) await updateProject({ zoning: data.updatedZoning });
       if (data.updatedCopy) await updateProject({ copy: data.updatedCopy });
     } catch (err) {
