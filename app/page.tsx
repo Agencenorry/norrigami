@@ -600,18 +600,27 @@ export default function Home() {
       filesSnapshot.forEach((f) => formData.append("files", f));
       const response = await fetch("/api/chat", { method: "POST", body: formData });
       const data = await response.json();
+      console.log("CHAT DATA:", JSON.stringify(data));
       if (!response.ok) throw new Error(data.error);
-      const assistantMessage = data.message && !data.message.startsWith("{")
-        ? data.message
-        : data.updatedZoning
-          ? "Zoning mis à jour ✓"
-          : data.updatedCopy
-            ? "Copy mis à jour ✓"
-            : data.message || "Fait.";
-      setChatMessages((prev) => [...prev, { role: "assistant", content: assistantMessage }]);
 
-      if (data.updatedZoning) await updateProject({ zoning: data.updatedZoning });
-      if (data.updatedCopy) await updateProject({ copy: data.updatedCopy });
+      let assistantText = "";
+      if (data.updatedZoning) {
+        assistantText =
+          data.message && data.message.length < 200 && !data.message.includes('"updatedZoning"')
+            ? data.message
+            : "Zoning mis à jour ✓";
+        await updateProject({ zoning: data.updatedZoning });
+      } else if (data.updatedCopy) {
+        assistantText =
+          data.message && data.message.length < 200 && !data.message.includes('"updatedCopy"')
+            ? data.message
+            : "Copy mis à jour ✓";
+        await updateProject({ copy: data.updatedCopy });
+      } else {
+        assistantText = data.message || "Fait.";
+      }
+
+      setChatMessages((prev) => [...prev, { role: "assistant", content: assistantText }]);
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
