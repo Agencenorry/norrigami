@@ -65,15 +65,35 @@ Retourne UNIQUEMENT le JSON, sans markdown ni backticks.`;
       .join("\n")
       .trim();
 
-    let parsed;
-    try {
-      const clean = text.replace(/```json\n?|\n?```/g, "").trim();
-      parsed = JSON.parse(clean);
-    } catch {
-      parsed = { message: text };
+    const clean = text.replace(/```json\n?|\n?```/g, "").trim();
+
+    const jsonMatch = clean.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]) as unknown;
+        if (parsed && typeof parsed === "object") {
+          const p = parsed as Record<string, unknown>;
+          const hasUsefulFields =
+            typeof p.message === "string" ||
+            typeof p.revised === "string" ||
+            typeof p.updatedZoning === "string" ||
+            typeof p.updatedCopy === "string";
+
+          if (hasUsefulFields) {
+            const out: Record<string, unknown> = {};
+            if (typeof p.message === "string") out.message = p.message;
+            if (typeof p.revised === "string") out.revised = p.revised;
+            if (typeof p.updatedZoning === "string") out.updatedZoning = p.updatedZoning;
+            if (typeof p.updatedCopy === "string") out.updatedCopy = p.updatedCopy;
+            return NextResponse.json(out, { headers: CORS_HEADERS });
+          }
+        }
+      } catch {
+        // fallback below
+      }
     }
 
-    return NextResponse.json(parsed, { headers: CORS_HEADERS });
+    return NextResponse.json({ message: text }, { headers: CORS_HEADERS });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Erreur révision" }, { status: 500, headers: CORS_HEADERS });
