@@ -609,12 +609,14 @@ export default function Home() {
           data.message && data.message.length < 200 && !data.message.includes('"updatedZoning"')
             ? data.message
             : "Zoning mis à jour ✓";
+        setCurrentProject((prev) => (prev ? { ...prev, zoning: data.updatedZoning } : prev));
         await updateProject({ zoning: data.updatedZoning });
       } else if (data.updatedCopy) {
         assistantText =
           data.message && data.message.length < 200 && !data.message.includes('"updatedCopy"')
             ? data.message
             : "Copy mis à jour ✓";
+        setCurrentProject((prev) => (prev ? { ...prev, copy: data.updatedCopy } : prev));
         await updateProject({ copy: data.updatedCopy });
       } else {
         assistantText = data.message || "Fait.";
