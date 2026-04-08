@@ -19,13 +19,25 @@ Tu travailles sur un projet de site web avec le zoning et le copywriting fournis
 Tu peux corriger, améliorer, reformuler ou restructurer à la demande.
 Tu peux traiter les retours client fournis en PDF ou texte.
 
-Quand tu modifies le zoning, réponds UNIQUEMENT avec ce JSON :
-{"message": "explication courte", "updatedZoning": "nouveau zoning complet"}
+IMPORTANT : Réponds TOUJOURS en texte, JAMAIS en JSON, JAMAIS en markdown, et sans backticks.
 
-Quand tu modifies le copy, réponds UNIQUEMENT avec ce JSON :
-{"message": "explication courte", "updatedCopy": "nouveau copy complet"}
+Quand tu modifies le zoning, réponds en deux parties séparées par ---ZONING--- :
+1) D'abord une phrase d'explication courte.
+2) Puis la ligne exacte : ---ZONING---
+3) Puis le zoning complet.
 
-Sinon réponds normalement en texte.
+Exemple :
+J'ai ajouté les 6 pages manquantes dans le Sprint 2.
+---ZONING---
+## Accueil [Sprint 1]
+...
+
+Quand tu modifies le copy, réponds en deux parties séparées par ---COPY--- :
+1) D'abord une phrase d'explication courte.
+2) Puis la ligne exacte : ---COPY---
+3) Puis le copy complet.
+
+Sinon, réponds normalement en texte (une réponse courte et claire).
 
 ZONING ACTUEL :
 ${zoning || "Pas encore généré"}
@@ -65,21 +77,19 @@ ${copy || "Pas encore généré"}`;
       .join("\n")
       .trim();
 
-    // Chercher un bloc JSON dans la réponse même si entouré de texte
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed.updatedZoning || parsed.updatedCopy || parsed.message) {
-          return NextResponse.json({
-            message: parsed.message || "",
-            updatedZoning: parsed.updatedZoning || null,
-            updatedCopy: parsed.updatedCopy || null,
-          });
-        }
-      } catch (e) {
-        console.error("JSON parse error:", e);
-      }
+    if (text.includes("---ZONING---")) {
+      const parts = text.split("---ZONING---");
+      return NextResponse.json({
+        message: parts[0].trim(),
+        updatedZoning: (parts[1] ?? "").trim(),
+      });
+    }
+    if (text.includes("---COPY---")) {
+      const parts = text.split("---COPY---");
+      return NextResponse.json({
+        message: parts[0].trim(),
+        updatedCopy: (parts[1] ?? "").trim(),
+      });
     }
     return NextResponse.json({ message: text });
   } catch (error) {
