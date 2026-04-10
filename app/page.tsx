@@ -106,16 +106,28 @@ function Spinner({ className }: { className?: string }) {
 }
 
 function buildUxPilotPrompt(zoning: string | null, copy: string | null) {
-  return `Tu es un expert UX/UI. Génère une maquette complète pour ce site web.
+  return `Génère des wireframes low-fidelity pour ce site web.
 
-ZONING :
+CONTRAINTES LOW-FI STRICTES :
+- Formes géométriques simples uniquement : rectangles, lignes, cercles
+- Pas de couleurs réelles : uniquement niveaux de gris (#F5F5F5, #E5E5E5, #CCCCCC, #999999, #333333)
+- Pas d'images réelles : remplace par des rectangles gris avec une croix dedans
+- Texte en blocs : les titres en barres grises épaisses, les paragraphes en lignes fines
+- Boutons : rectangles avec bordure, sans style
+- Icônes : cercles ou carrés simples
+- Navigation : barre rectangulaire avec liens en texte simple
+- L'objectif est de représenter la STRUCTURE et le CONTENU, pas le style visuel
+
+ZONING (structure des pages) :
 ${zoning || ""}
 
-COPYWRITING :
+COPYWRITING (contenu textuel) :
 ${copy || ""}
 
-Instructions : Crée une maquette fidèle au zoning et au copy fournis.
-Utilise un design moderne, épuré, professionnel pour une entreprise B2B.`;
+Instructions : Génère une page à la fois en commençant par la page d'accueil.
+Représente chaque bloc du zoning comme une zone rectangulaire clairement délimitée.
+Indique le nom du bloc en petit texte gris en haut de chaque zone.
+Place le copy réel dans chaque bloc sous forme de texte simple.`;
 }
 
 function extractPages(zoning: string): { name: string; content: string }[] {
