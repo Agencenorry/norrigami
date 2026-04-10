@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     const message = formData.get("message") as string;
     const zoning = formData.get("zoning") as string;
     const copy = formData.get("copy") as string;
+    const activePage = (formData.get("activePage") as string | null) ?? "";
     const historyRaw = formData.get("history") as string;
     const files = formData.getAll("files") as File[];
     const history = historyRaw ? JSON.parse(historyRaw) : [];
@@ -32,18 +33,14 @@ J'ai ajouté les 6 pages manquantes dans le Sprint 2.
 ## Accueil [Sprint 1]
 ...
 
-Quand tu modifies le copy, réponds en deux parties séparées par ---COPY--- :
-1) D'abord une phrase d'explication courte.
-2) Puis la ligne exacte : ---COPY---
-3) Puis le copy complet.
+Quand tu modifies le copy, réponds avec ---COPY--- puis le copy complet de CETTE PAGE UNIQUEMENT.
 
 Sinon, réponds normalement en texte (une réponse courte et claire).
 
 ZONING ACTUEL :
 ${zoning || "Pas encore généré"}
 
-COPY ACTUEL :
-${copy || "Pas encore généré"}`;
+${activePage ? `PAGE ACTIVE : ${activePage}\n\nCOPY DE CETTE PAGE :\n${copy}` : `COPY ACTUEL :\n${copy || "Pas encore généré"}`}`;
 
     const messages: Anthropic.MessageParam[] = [];
     for (const msg of history) {

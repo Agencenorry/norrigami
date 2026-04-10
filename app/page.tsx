@@ -656,7 +656,12 @@ export default function Home() {
       const formData = new FormData();
       formData.append("message", inputSnapshot);
       formData.append("zoning", currentProject.zoning || "");
-      formData.append("copy", currentProject.copy || "");
+      const activePage =
+        chatFiles.length === 0
+          ? copyPages.find((p) => p.name === activeCopyPage)?.content || currentProject.copy || ""
+          : currentProject.copy || "";
+      formData.append("copy", activePage);
+      formData.append("activePage", activeCopyPage || "");
       formData.append("history", JSON.stringify(chatMessages));
       filesSnapshot.forEach((f) => formData.append("files", f));
       const response = await fetch("/api/chat", { method: "POST", body: formData });
@@ -678,6 +683,18 @@ export default function Home() {
             : "Zoning mis à jour ✓";
         setCurrentProject((prev) => (prev ? { ...prev, zoning: data.updatedZoning } : prev));
         await updateProject({ zoning: data.updatedZoning });
+      } else if (data.updatedCopy && activeCopyPage) {
+        assistantText =
+          data.message && data.message.length < 200 && !data.message.includes('"updatedCopy"')
+            ? data.message
+            : "Copy mis à jour ✓";
+        const updatedPages = copyPages.map((p) =>
+          p.name === activeCopyPage ? { ...p, content: data.updatedCopy } : p
+        );
+        setCopyPages(updatedPages);
+        const fullCopy = updatedPages.map((p) => p.content).join("\n\n");
+        setCurrentProject((prev) => (prev ? { ...prev, copy: fullCopy } : prev));
+        await updateProject({ copy: fullCopy });
       } else if (data.updatedCopy) {
         assistantText =
           data.message && data.message.length < 200 && !data.message.includes('"updatedCopy"')
@@ -703,12 +720,14 @@ export default function Home() {
     }
   };
 
-  const renderCorrectionChat = () => (
+  const renderCorrectionChat = (targetPage?: string) => (
     <div className="bg-white border border-[#E5E5E5] rounded-2xl overflow-hidden">
       <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <IconPen className="w-4 h-4 text-[#220D31]" />
-          <span className="text-sm font-semibold text-[#220D31]">Demander une correction</span>
+          <span className="text-sm font-semibold text-[#220D31]">
+            {targetPage ? `Corriger — ${targetPage}` : "Demander une correction"}
+          </span>
         </div>
         {chatMessages.length > 0 && (
           <button
@@ -1611,7 +1630,7 @@ export default function Home() {
               )}
             </div>
 
-            {!loadingCopy && renderCorrectionChat()}
+            {!loadingCopy && renderCorrectionChat(activeCopyPage)}
 
             <div className="bg-[#F5F5F5] border border-[#E5E5E5] rounded-xl p-4 flex items-start gap-3">
               <IconFigma className="w-5 h-5 text-[#220D31] shrink-0 mt-0.5" />
