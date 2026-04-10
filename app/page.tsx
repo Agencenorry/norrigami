@@ -338,6 +338,8 @@ export default function Home() {
   };
 
   const openProject = (project: Project) => {
+    console.log("COPY DÉBUT:", project.copy?.substring(0, 500));
+    console.log("ZONING DÉBUT:", project.zoning?.substring(0, 500));
     setCurrentProject(project);
     setBrief(project.brief);
     setUrl(project.url);
