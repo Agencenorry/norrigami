@@ -348,10 +348,38 @@ export default function Home() {
     setHasExistingZoning(false);
     setZoningPdf(null);
     setStep(project.copy ? "copy" : project.zoning ? "zoning" : "brief");
-    if (project.copy) {
-      const pages = extractPages(project.copy);
-      setCopyPages(pages);
-      if (pages.length > 0) setActiveCopyPage(pages[0].name);
+    if (project.copy && project.zoning) {
+      // Extraire les noms de pages depuis le ZONING (plus fiable)
+      const zoningPages = extractPages(project.zoning);
+      // Extraire le contenu depuis le COPY en cherchant chaque nom de page
+      const populated = zoningPages
+        .map((zp) => {
+          // Chercher la section correspondante dans le copy
+          const copyLines = project.copy!.split("\n");
+          const startIdx = copyLines.findIndex(
+            (l) => l.includes(zp.name) && (l.startsWith("#") || l.toUpperCase() === l.toUpperCase())
+          );
+          if (startIdx === -1) return { name: zp.name, content: "" };
+
+          // Trouver la fin de cette section (prochaine page)
+          const nextIdx = copyLines.findIndex(
+            (l, i) =>
+              i > startIdx &&
+              zoningPages.some((p) => p.name !== zp.name && l.includes(p.name) && l.startsWith("#"))
+          );
+          const content = copyLines.slice(startIdx, nextIdx === -1 ? undefined : nextIdx).join("\n");
+          return { name: zp.name, content };
+        })
+        .filter((p) => p.content.trim() !== "");
+
+      if (populated.length > 0) {
+        setCopyPages(populated);
+        setActiveCopyPage(populated[0].name);
+      } else {
+        // Fallback : une seule page avec tout le copy
+        setCopyPages([{ name: "Site complet", content: project.copy }]);
+        setActiveCopyPage("Site complet");
+      }
     }
     setError(null);
     setView("project");
