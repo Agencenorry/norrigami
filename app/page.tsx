@@ -348,6 +348,19 @@ export default function Home() {
     setHasExistingZoning(false);
     setZoningPdf(null);
     setStep(project.copy ? "copy" : project.zoning ? "zoning" : "brief");
+    if (project.copy) {
+      const pages = extractPages(project.zoning || project.copy);
+      const sections = project.copy.split("## ");
+      const populated = pages.map((p) => {
+        const match = sections.find((s) => s.startsWith(p.name));
+        return {
+          name: p.name,
+          content: match ? "## " + match : "",
+        };
+      });
+      setCopyPages(populated.filter((p) => p.content));
+      if (populated.length > 0) setActiveCopyPage(populated[0].name);
+    }
     setError(null);
     setView("project");
   };
