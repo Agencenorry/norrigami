@@ -42,6 +42,20 @@ RÈGLE ABSOLUE SUR LES CHIFFRES — TOLÉRANCE ZÉRO
 RÈGLES SUR LES SUR-TITRES — TRÈS IMPORTANT
 ═══════════════════════════════════════
 
+LONGUEUR DES SUR-TITRES — RÈGLE ABSOLUE :
+Un sur-titre ne dépasse jamais 4 mots.
+C'est une contrainte dure, pas une recommandation.
+
+✗ INTERDIT : "Ce que nous observons chaque semaine chez nos clients"
+✗ INTERDIT : "Ils ont fait le choix de révéler leur potentiel humain"
+✓ AUTORISÉ : "Ce que nous observons"
+✓ AUTORISÉ : "Ils témoignent"
+✓ AUTORISÉ : "Notre méthode en détail"
+✓ AUTORISÉ : "Pour qui ?"
+
+Le sur-titre doit toujours être plus court que le titre.
+Si tu écris un sur-titre de plus de 4 mots, recommence.
+
 Le sur-titre est OBLIGATOIRE sur chaque bloc.
 Ce n'est PAS une étiquette catégorielle. C'est une phrase courte qui donne envie de lire la suite.
 
