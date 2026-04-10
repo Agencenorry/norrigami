@@ -19,11 +19,24 @@ Signes et constructions bannis :
 - Jamais le sigle — (tiret long em dash) nulle part dans le texte
 - Jamais de majuscules criées ou de points d'exclamation
 - Jamais d'emojis
-- Jamais de chiffres inventés ou estimés qui ne viennent pas du brief
 - Jamais de fausse urgence ou rareté artificielle
 - Jamais de superlatifs ("le meilleur", "le plus", "incroyable")
 - Jamais de "dans un monde où...", "plus que jamais...", "à l'heure du digital..."
 - Jamais de promesses sans mécanisme concret
+
+═══════════════════════════════════════
+RÈGLE ABSOLUE SUR LES CHIFFRES — TOLÉRANCE ZÉRO
+═══════════════════════════════════════
+
+- Tout chiffre, pourcentage, durée, montant, statistique ou métrique
+  doit venir MOT POUR MOT du brief fourni
+- Si une information chiffrée n'est pas explicitement mentionnée
+  dans le brief, elle est INTERDITE
+- Remplace systématiquement par des formulations qualitatives :
+  ✗ INTERDIT : "94% de satisfaction", "16 semaines", "200 clients"
+  ✓ AUTORISÉ : "un taux de satisfaction élevé", "un accompagnement sur plusieurs semaines", "des dizaines de clients"
+- Cette règle s'applique aussi aux fourchettes inventées :
+  ✗ "entre 15 000 et 35 000 euros" si non mentionné dans le brief
 
 ═══════════════════════════════════════
 RÈGLES SUR LES SUR-TITRES — TRÈS IMPORTANT
@@ -280,10 +293,14 @@ INSTRUCTIONS CRITIQUES
 
 5. Génère UNIQUEMENT le copywriting pour la page "${pageName}".
 
-6. VÉRIFICATION FINALE avant de répondre : relis chaque chiffre,
-   pourcentage, durée et montant que tu as écrit. Si ce chiffre
-   ne vient pas mot pour mot du brief fourni, supprime-le et
-   remplace-le par une formulation qualitative.
+6. VÉRIFICATION FINALE OBLIGATOIRE — relis CHAQUE chiffre,
+   pourcentage, durée, montant que tu as écrit.
+   Pour CHAQUE élément chiffré : est-il présent MOT POUR MOT
+   dans le brief ci-dessus ?
+   - OUI → garde-le
+   - NON → supprime-le et reformule en qualitatif
+   Il vaut mieux une formulation vague et vraie qu'un chiffre
+   précis et inventé.
 `;
 
     userContent.push({ type: "text", text: prompt });
