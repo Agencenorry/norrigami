@@ -930,7 +930,7 @@ export default function Home() {
             <div className="p-6 border-b border-[#E5E5E5] flex items-center justify-between gap-4">
               <h3 className="text-lg font-semibold text-[#220D31] flex items-center gap-2">
                 <IconUxPilot className="w-5 h-5 shrink-0" />
-                {uxPilotPage ? `Prompt UX Pilot — ${uxPilotPage}` : "Prompt UX Pilot — Site complet"}
+                {uxPilotPage ? `Prompt Stitch — ${uxPilotPage}` : "Prompt Stitch — Site complet"}
               </h3>
               <button
                 type="button"
@@ -955,12 +955,12 @@ export default function Home() {
                   Copier le prompt
                 </button>
                 <a
-                  href="https://uxpilot.ai"
+                  href="https://stitchdesign.ai"
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`${btnSecondary} inline-flex items-center gap-2 no-underline`}
                 >
-                  Ouvrir UX Pilot →
+                  Ouvrir Stitch →
                 </a>
               </div>
             </div>
@@ -1438,7 +1438,7 @@ export default function Home() {
                         className={`${btnPrimary} inline-flex items-center gap-2 text-xs py-2`}
                       >
                         <IconUxPilot className="w-4 h-4" />
-                        Générer prompt UX Pilot
+                        Générer prompt Stitch
                       </button>
                     )}
                     {currentProject?.miroUrl && (
@@ -1548,7 +1548,7 @@ export default function Home() {
                           className={`${btnPrimary} inline-flex items-center gap-2 text-xs py-2`}
                         >
                           <IconUxPilot className="w-4 h-4" />
-                          Prompt UX Pilot — {activeCopyPage}
+                          Prompt Stitch — {activeCopyPage}
                         </button>
                         <button
                           type="button"
