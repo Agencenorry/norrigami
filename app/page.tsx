@@ -105,29 +105,41 @@ function Spinner({ className }: { className?: string }) {
   );
 }
 
-function buildUxPilotPrompt(zoning: string | null, copy: string | null) {
-  return `Generate low-fidelity wireframes for this website.
+function buildUxPilotPrompt(zoning: string | null, copy: string | null, pageName?: string | null) {
+  const sections = (copy ?? "").split("## ");
+  const matched =
+    pageName != null && pageName !== ""
+      ? sections.find((section) => section.startsWith(pageName))
+      : undefined;
+  const pageContent =
+    pageName != null && pageName !== ""
+      ? matched
+        ? "## " + matched
+        : copy || ""
+      : copy || "";
+
+  return `Generate low-fidelity wireframes for ${pageName ? `the "${pageName}" page` : "this website"}.
 
 STRICT LOW-FI CONSTRAINTS:
 - Simple geometric shapes only: rectangles, lines, circles
-- No real colors: grayscale only (#F5F5F5, #E5E5E5, #CCCCCC, #999999, #333333)
-- No real images: replace with gray rectangles containing a cross
+- No real colors: only grayscale (#F5F5F5, #E5E5E5, #CCCCCC, #999999, #333333)
+- No real images: replace with gray rectangles with an X inside
 - Text as blocks: titles as thick gray bars, paragraphs as thin lines
-- Buttons: rectangles with a border, no styling
+- Buttons: rectangles with border, no styling
 - Icons: simple circles or squares
 - Navigation: rectangular bar with plain text links
-- The goal is to represent STRUCTURE and CONTENT, not visual style
+- Goal: represent STRUCTURE and CONTENT, not visual style
 
-ZONING (page structure):
+${pageName ? "PAGE STRUCTURE (zoning):" : "SITE STRUCTURE (zoning):"}
 ${zoning || ""}
 
-COPYWRITING (textual content):
-${copy || ""}
+${pageName ? `CONTENT FOR "${pageName}" PAGE:` : "COPYWRITING (text content):"}
+${pageContent}
 
-Instructions: Generate one page at a time, starting with the home page.
-Represent each zoning block as a clearly delimited rectangular area.
-Label each block with its name in small gray text at the top of the zone.
-Place the actual copy in each block as plain text.`;
+Instructions: Generate wireframes block by block following the zoning structure.
+Each block should be a clearly delimited rectangular zone.
+Show the block name in small gray text at the top of each zone.
+Place the actual copy inside each block as plain text.`;
 }
 
 function extractPages(zoning: string): { name: string; content: string }[] {
@@ -234,11 +246,13 @@ export default function Home() {
   const [generatingPageIndex, setGeneratingPageIndex] = useState<number>(-1);
 
   const [uxPilotOpen, setUxPilotOpen] = useState(false);
+  const [uxPilotPage, setUxPilotPage] = useState<string | null>(null);
   const [figJamNotice, setFigJamNotice] = useState<{ apiUrl: string; projectId: string } | null>(null);
 
   const uxPilotPromptText = useMemo(
-    () => buildUxPilotPrompt(currentProject?.zoning ?? null, currentProject?.copy ?? null),
-    [currentProject?.zoning, currentProject?.copy]
+    () =>
+      buildUxPilotPrompt(currentProject?.zoning ?? null, currentProject?.copy ?? null, uxPilotPage),
+    [currentProject?.zoning, currentProject?.copy, uxPilotPage]
   );
 
   useEffect(() => {
@@ -911,7 +925,7 @@ export default function Home() {
             <div className="p-6 border-b border-[#E5E5E5] flex items-center justify-between gap-4">
               <h3 className="text-lg font-semibold text-[#220D31] flex items-center gap-2">
                 <IconUxPilot className="w-5 h-5 shrink-0" />
-                Prompt UX Pilot
+                {uxPilotPage ? `Prompt UX Pilot — ${uxPilotPage}` : "Prompt UX Pilot — Site complet"}
               </h3>
               <button
                 type="button"
@@ -1412,7 +1426,10 @@ export default function Home() {
                     {currentProject?.copy && (
                       <button
                         type="button"
-                        onClick={() => setUxPilotOpen(true)}
+                        onClick={() => {
+                          setUxPilotPage(null);
+                          setUxPilotOpen(true);
+                        }}
                         className={`${btnPrimary} inline-flex items-center gap-2 text-xs py-2`}
                       >
                         <IconUxPilot className="w-4 h-4" />
@@ -1516,7 +1533,18 @@ export default function Home() {
                 <>
                   {copyPages.length > 0 ? (
                     <>
-                      <div className="flex justify-end mb-4">
+                      <div className="flex justify-end mb-4 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUxPilotPage(activeCopyPage);
+                            setUxPilotOpen(true);
+                          }}
+                          className={`${btnPrimary} inline-flex items-center gap-2 text-xs py-2`}
+                        >
+                          <IconUxPilot className="w-4 h-4" />
+                          Prompt UX Pilot — {activeCopyPage}
+                        </button>
                         <button
                           type="button"
                           onClick={() => navigator.clipboard.writeText(copyPages.find((p) => p.name === activeCopyPage)?.content || "")}
