@@ -660,7 +660,13 @@ export default function Home() {
       formData.append("history", JSON.stringify(chatMessages));
       filesSnapshot.forEach((f) => formData.append("files", f));
       const response = await fetch("/api/chat", { method: "POST", body: formData });
-      const data = await response.json();
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { message: "Le serveur a mis trop de temps à répondre. Réessaie." };
+      }
       console.log("CHAT DATA:", JSON.stringify(data));
       if (!response.ok) throw new Error(data.error);
 
