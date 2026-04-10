@@ -93,10 +93,11 @@ ${copy || "Pas encore généré"}`;
     }
     return NextResponse.json({ message: text });
   } catch (error) {
-    console.error(error);
+    const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+    console.error("Chat API error:", errorMessage);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Erreur inconnue" },
-      { status: 500 }
+      { message: `Erreur serveur : ${errorMessage}` },
+      { status: 200 }
     );
   }
 }
