@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type Dispatch, type SetStateAction } from "react";
 
 interface Project {
   id: string;
@@ -220,10 +220,22 @@ export default function Home() {
   const [zoningPdfs, setZoningPdfs] = useState<File[]>([]);
   const [loadingImportZoning, setLoadingImportZoning] = useState(false);
 
-  const [copyBrief, setCopyBrief] = useState("");
-  const [copyBriefFiles, setCopyBriefFiles] = useState<File[]>([]);
-  const [keywords, setKeywords] = useState("");
-  const [keywordsFiles, setKeywordsFiles] = useState<File[]>([]);
+  const [adn, setAdn] = useState("");
+  const [adnFiles, setAdnFiles] = useState<File[]>([]);
+  const [personas, setPersonas] = useState("");
+  const [personasFiles, setPersonasFiles] = useState<File[]>([]);
+  const [methodologie, setMethodologie] = useState("");
+  const [methodologieFiles, setMethodologieFiles] = useState<File[]>([]);
+  const [toneOfVoice, setToneOfVoice] = useState("");
+  const [toneOfVoiceFiles, setToneOfVoiceFiles] = useState<File[]>([]);
+  const [preuves, setPreuves] = useState("");
+  const [preuvesFiles, setPreuvesFiles] = useState<File[]>([]);
+  const [objections, setObjections] = useState("");
+  const [objectionsFiles, setObjectionsFiles] = useState<File[]>([]);
+  const [lexique, setLexique] = useState("");
+  const [lexiqueFiles, setLexiqueFiles] = useState<File[]>([]);
+  const [warnings, setWarnings] = useState("");
+  const [warningsFiles, setWarningsFiles] = useState<File[]>([]);
 
   const [loadingZoning, setLoadingZoning] = useState(false);
   const [loadingCopy, setLoadingCopy] = useState(false);
@@ -326,10 +338,22 @@ export default function Home() {
     setSprints("");
     setPdfUrl("");
     setFiles([]);
-    setCopyBrief("");
-    setCopyBriefFiles([]);
-    setKeywords("");
-    setKeywordsFiles([]);
+    setAdn("");
+    setAdnFiles([]);
+    setPersonas("");
+    setPersonasFiles([]);
+    setMethodologie("");
+    setMethodologieFiles([]);
+    setToneOfVoice("");
+    setToneOfVoiceFiles([]);
+    setPreuves("");
+    setPreuvesFiles([]);
+    setObjections("");
+    setObjectionsFiles([]);
+    setLexique("");
+    setLexiqueFiles([]);
+    setWarnings("");
+    setWarningsFiles([]);
     setHasExistingZoning(false);
     setZoningPdfs([]);
     setStep("brief");
@@ -345,8 +369,22 @@ export default function Home() {
     setUrl(project.url);
     setNotes(project.notes);
     setSprints(project.sprints || "");
-    setCopyBrief(project.copyBrief || "");
-    setKeywords(project.keywords || "");
+    setAdn("");
+    setAdnFiles([]);
+    setPersonas("");
+    setPersonasFiles([]);
+    setMethodologie("");
+    setMethodologieFiles([]);
+    setToneOfVoice("");
+    setToneOfVoiceFiles([]);
+    setPreuves("");
+    setPreuvesFiles([]);
+    setObjections("");
+    setObjectionsFiles([]);
+    setLexique("");
+    setLexiqueFiles([]);
+    setWarnings("");
+    setWarningsFiles([]);
     setHasExistingZoning(false);
     setZoningPdfs([]);
     setStep(project.copy ? "copy" : project.zoning ? "zoning" : "brief");
@@ -417,17 +455,12 @@ export default function Home() {
     setZoningPdfs((prev) => [...prev, ...pdfs]);
   };
 
-  const addCopyBriefPdfs = (incoming: FileList | null) => {
-    if (!incoming) return;
-    const pdfs = Array.from(incoming).filter((f) => f.type === "application/pdf");
-    setCopyBriefFiles((prev) => [...prev, ...pdfs]);
-  };
-
-  const addKeywordsCsvs = (incoming: FileList | null) => {
-    if (!incoming) return;
-    const csvs = Array.from(incoming).filter((f) => f.name.toLowerCase().endsWith(".csv"));
-    setKeywordsFiles((prev) => [...prev, ...csvs]);
-  };
+  const addPdfsTo =
+    (setter: Dispatch<SetStateAction<File[]>>) => (incoming: FileList | null) => {
+      if (!incoming) return;
+      const pdfs = Array.from(incoming).filter((f) => f.type === "application/pdf");
+      setter((prev) => [...prev, ...pdfs]);
+    };
 
   const handleImportZoning = async () => {
     if (zoningPdfs.length === 0) return;
@@ -583,14 +616,29 @@ export default function Home() {
     setStep("copy");
     setActiveTab("copy");
 
-    let context = "Voici les informations pour générer le copywriting :\n\n";
+    let context = "Voici les informations stratégiques pour générer le copywriting :\n\n";
+    if (adn) context += `### ADN & Proposition de Valeur\n${adn}\n\n`;
+    if (personas) context += `### Portrait des clients (Personas)\n${personas}\n\n`;
+    if (methodologie) context += `### Méthodologie & Expertise\n${methodologie}\n\n`;
+    if (toneOfVoice) context += `### Identité verbale (Tone of Voice)\n${toneOfVoice}\n\n`;
+    if (preuves) context += `### Éléments de preuve & Réassurance\n${preuves}\n\n`;
+    if (objections) context += `### Traitement des objections\n${objections}\n\n`;
+    if (lexique) context += `### Lexique & Vocabulaire\n${lexique}\n\n`;
+    if (warnings) context += `### ⚠ Warnings\n${warnings}\n\n`;
     if (brief) context += `### Brief client\n${brief}\n\n`;
     if (url) context += `### URL du site existant\n${url}\n\n`;
     if (notes) context += `### Notes d'entretien\n${notes}\n\n`;
-    if (copyBrief) context += `### Brief copywriting\n${copyBrief}\n\n`;
-    const keywordsFromFiles = await Promise.all(keywordsFiles.map((f) => f.text()));
-    const keywordsMerged = [keywords, ...keywordsFromFiles].filter((s) => s.trim()).join("\n\n");
-    if (keywordsMerged) context += `### Mots-clés SEO\n${keywordsMerged}\n\n`;
+
+    const allCopyFiles = [
+      ...adnFiles,
+      ...personasFiles,
+      ...methodologieFiles,
+      ...toneOfVoiceFiles,
+      ...preuvesFiles,
+      ...objectionsFiles,
+      ...lexiqueFiles,
+      ...warningsFiles,
+    ];
 
     try {
       const results: { name: string; content: string }[] = [...initialCopyPages];
@@ -613,7 +661,7 @@ export default function Home() {
           "previousPages",
           JSON.stringify(results.filter((r) => r.content).map((r) => ({ name: r.name, content: r.content })))
         );
-        copyBriefFiles.forEach((f) => formData.append("copyBriefFile", f));
+        allCopyFiles.forEach((f) => formData.append("copyBriefFile", f));
 
         const response = await fetch("/api/generate-copy", {
           method: "POST",
@@ -633,10 +681,10 @@ export default function Home() {
       setGeneratingPageIndex(-1);
 
       const fullCopy = results.map((p) => p.content).join("\n\n");
-      const keywordsMergedForSave = [keywords, ...keywordsFromFiles].filter((s) => s.trim()).join("\n\n");
-      await updateProject({ copy: fullCopy, copyBrief, keywords: keywordsMergedForSave });
-      setKeywords(keywordsMergedForSave);
-      setCurrentProject((prev) => (prev ? { ...prev, copy: fullCopy, keywords: keywordsMergedForSave } : prev));
+      await updateProject({ copy: fullCopy, copyBrief: context, keywords: lexique });
+      setCurrentProject((prev) =>
+        prev ? { ...prev, copy: fullCopy, copyBrief: context, keywords: lexique } : prev
+      );
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
       setStep("copy-brief");
@@ -865,6 +913,110 @@ export default function Home() {
       </div>
     </div>
   );
+
+  const copyBriefHasInput =
+    [adn, personas, methodologie, toneOfVoice, preuves, objections, lexique, warnings].some((s) => s.trim()) ||
+    [
+      adnFiles,
+      personasFiles,
+      methodologieFiles,
+      toneOfVoiceFiles,
+      preuvesFiles,
+      objectionsFiles,
+      lexiqueFiles,
+      warningsFiles,
+    ].some((a) => a.length > 0);
+
+  const copyBriefSections: {
+    inputId: string;
+    label: string;
+    placeholder: string;
+    value: string;
+    setValue: (v: string) => void;
+    files: File[];
+    setFiles: Dispatch<SetStateAction<File[]>>;
+  }[] = [
+    {
+      inputId: "copy-pdf-adn",
+      label: "ADN & Proposition de Valeur",
+      placeholder:
+        "Ce qui vous rend unique, votre mission, vos valeurs fondamentales, votre positionnement...",
+      value: adn,
+      setValue: setAdn,
+      files: adnFiles,
+      setFiles: setAdnFiles,
+    },
+    {
+      inputId: "copy-pdf-personas",
+      label: "Portrait de vos clients (Personas)",
+      placeholder:
+        "Qui sont vos clients idéaux ? Leurs enjeux, motivations, contexte professionnel...",
+      value: personas,
+      setValue: setPersonas,
+      files: personasFiles,
+      setFiles: setPersonasFiles,
+    },
+    {
+      inputId: "copy-pdf-methodo",
+      label: "Méthodologie & Expertise",
+      placeholder:
+        "Comment vous travaillez, vos process, ce qui différencie votre approche...",
+      value: methodologie,
+      setValue: setMethodologie,
+      files: methodologieFiles,
+      setFiles: setMethodologieFiles,
+    },
+    {
+      inputId: "copy-pdf-tov",
+      label: "Identité verbale (Tone of Voice)",
+      placeholder:
+        "Ton souhaité, style d'écriture, niveau de langage, exemples de formulations...",
+      value: toneOfVoice,
+      setValue: setToneOfVoice,
+      files: toneOfVoiceFiles,
+      setFiles: setToneOfVoiceFiles,
+    },
+    {
+      inputId: "copy-pdf-preuves",
+      label: "Éléments de preuve & Réassurance",
+      placeholder:
+        "Chiffres clés réels, témoignages, labels, certifications, références clients...",
+      value: preuves,
+      setValue: setPreuves,
+      files: preuvesFiles,
+      setFiles: setPreuvesFiles,
+    },
+    {
+      inputId: "copy-pdf-objections",
+      label: "Traitement des objections",
+      placeholder:
+        "Les 5 objections courantes de vos prospects et comment y répondre...",
+      value: objections,
+      setValue: setObjections,
+      files: objectionsFiles,
+      setFiles: setObjectionsFiles,
+    },
+    {
+      inputId: "copy-pdf-lexique",
+      label: "Lexique & Vocabulaire",
+      placeholder:
+        "À utiliser absolument : [mots clés, expressions]\nÀ bannir : [mots, expressions interdites]...",
+      value: lexique,
+      setValue: setLexique,
+      files: lexiqueFiles,
+      setFiles: setLexiqueFiles,
+    },
+    {
+      inputId: "copy-pdf-warnings",
+      label: "⚠ Warning — À ne pas oublier",
+      placeholder:
+        "Contraintes spécifiques, informations critiques, points de vigilance particuliers...",
+      value: warnings,
+      setValue: setWarnings,
+      files: warningsFiles,
+      setFiles: setWarningsFiles,
+    },
+  ];
 
   const renderMarkdown = (text: string) => {
     return text.split("\n").map((line, i) => {
@@ -1433,104 +1585,63 @@ export default function Home() {
             <div>
               <p className="text-xs text-[#6B6B6B] uppercase tracking-widest mb-1">{currentProject?.name}</p>
               <h1 className="text-2xl font-semibold text-[#220D31]">Brief copywriting</h1>
-              <p className="text-[#6B6B6B] text-sm mt-1">Fournissez le brief copy et les mots-clés SEO pour générer les textes.</p>
+              <p className="text-[#6B6B6B] text-sm mt-1">
+                Renseignez les 8 blocs stratégiques et joignez des PDF si besoin. Le lexique alimente aussi le champ
+                mots-clés du projet.
+              </p>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">Brief copywriting</label>
-              <textarea
-                value={copyBrief}
-                onChange={(e) => setCopyBrief(e.target.value)}
-                placeholder="Collez ici votre brief copywriting : angle éditorial, ton, cibles, messages clés, éléments de différenciation..."
-                rows={8}
-                className={field}
-              />
-              <div
-                onClick={() => document.getElementById("copy-brief-file")?.click()}
-                className="border-2 border-dashed border-[#E5E5E5] hover:border-[#2E1343] rounded-xl p-5 text-center cursor-pointer transition-colors bg-white"
-              >
-                <div className="text-[#6B6B6B] text-sm inline-flex items-center justify-center gap-2">
-                  <IconUpload className="w-4 h-4" />
-                  Ou uploader le brief en <span className="text-[#220D31] underline">PDF</span> (plusieurs possibles)
+            {copyBriefSections.map((s) => (
+              <div key={s.inputId} className="space-y-3">
+                <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">{s.label}</label>
+                <textarea
+                  value={s.value}
+                  onChange={(e) => s.setValue(e.target.value)}
+                  placeholder={s.placeholder}
+                  rows={6}
+                  className={field}
+                />
+                <div className="flex flex-wrap gap-2 items-center">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById(s.inputId)?.click()}
+                    className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
+                  >
+                    <IconUpload className="w-4 h-4" />
+                    Ajouter PDF
+                  </button>
+                  <span className="text-xs text-[#9B9B9B]">Plusieurs fichiers possibles</span>
                 </div>
-              </div>
-              <input
-                id="copy-brief-file"
-                type="file"
-                multiple
-                accept=".pdf"
-                onChange={(e) => addCopyBriefPdfs(e.target.files)}
-                className="hidden"
-              />
-              {copyBriefFiles.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {copyBriefFiles.map((f, i) => (
-                    <div
-                      key={`${f.name}-${i}`}
-                      className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31]"
-                    >
-                      {f.name}
-                      <button
-                        type="button"
-                        onClick={() => setCopyBriefFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                        className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer p-0.5"
-                        aria-label="Retirer"
+                <input
+                  id={s.inputId}
+                  type="file"
+                  multiple
+                  accept=".pdf"
+                  onChange={(e) => addPdfsTo(s.setFiles)(e.target.files)}
+                  className="hidden"
+                />
+                {s.files.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {s.files.map((f, i) => (
+                      <div
+                        key={`${s.inputId}-${f.name}-${i}`}
+                        className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31]"
                       >
-                        <IconTrash className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">Mots-clés SEO</label>
-              <textarea
-                value={keywords}
-                onChange={(e) => setKeywords(e.target.value)}
-                placeholder="Collez ici vos mots-clés SEO, un par ligne ou séparés par des virgules..."
-                rows={5}
-                className={field}
-              />
-              <div
-                onClick={() => document.getElementById("keywords-file")?.click()}
-                className="border-2 border-dashed border-[#E5E5E5] hover:border-[#2E1343] rounded-xl p-5 text-center cursor-pointer transition-colors bg-white"
-              >
-                <div className="text-[#6B6B6B] text-sm inline-flex items-center justify-center gap-2">
-                  <IconUpload className="w-4 h-4" />
-                  Ou uploader les mots-clés en <span className="text-[#220D31] underline">CSV</span> (plusieurs possibles)
-                </div>
+                        {f.name}
+                        <button
+                          type="button"
+                          onClick={() => s.setFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer p-0.5"
+                          aria-label="Retirer"
+                        >
+                          <IconTrash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <input
-                id="keywords-file"
-                type="file"
-                multiple
-                accept=".csv"
-                onChange={(e) => addKeywordsCsvs(e.target.files)}
-                className="hidden"
-              />
-              {keywordsFiles.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {keywordsFiles.map((f, i) => (
-                    <div
-                      key={`${f.name}-${i}`}
-                      className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31]"
-                    >
-                      {f.name}
-                      <button
-                        type="button"
-                        onClick={() => setKeywordsFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                        className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer p-0.5"
-                        aria-label="Retirer"
-                      >
-                        <IconTrash className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            ))}
 
             <div className="flex gap-4 flex-wrap">
               <button type="button" onClick={() => setStep("zoning")} className={btnSecondary}>
@@ -1545,7 +1656,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleGenerateCopy}
-                  disabled={!copyBrief.trim() && copyBriefFiles.length === 0}
+                  disabled={!copyBriefHasInput}
                   className={`${btnPrimary} flex-1 min-w-[200px]`}
                 >
                   Générer le copywriting →
