@@ -284,21 +284,20 @@ export async function POST(request: NextRequest) {
       ? previousPages.find((p) => listKeywords.some((k) => p.name.toLowerCase().includes(k))) ?? null
       : null;
 
-    const copyBriefFile = formData.get("copyBriefFile") as File | null;
-
-    let pdfBlock: Anthropic.DocumentBlockParam | null = null;
-    if (copyBriefFile && copyBriefFile.size > 0) {
-      const arrayBuffer = await copyBriefFile.arrayBuffer();
-      const base64 = Buffer.from(arrayBuffer).toString("base64");
-      pdfBlock = {
-        type: "document",
-        source: { type: "base64", media_type: "application/pdf", data: base64 },
-      };
-    }
+    const copyBriefFiles = formData
+      .getAll("copyBriefFile")
+      .filter((f): f is File => f instanceof File && f.size > 0);
 
     const userContent: Anthropic.MessageParam["content"] = [];
 
-    if (pdfBlock) userContent.push(pdfBlock);
+    for (const file of copyBriefFiles) {
+      const arrayBuffer = await file.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString("base64");
+      userContent.push({
+        type: "document",
+        source: { type: "base64", media_type: "application/pdf", data: base64 },
+      } as Anthropic.DocumentBlockParam);
+    }
 
     const zoningGlobal =
       fullZoning.trim() !== ""

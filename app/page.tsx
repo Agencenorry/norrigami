@@ -217,13 +217,13 @@ export default function Home() {
   const [dragging, setDragging] = useState(false);
 
   const [hasExistingZoning, setHasExistingZoning] = useState(false);
-  const [zoningPdf, setZoningPdf] = useState<File | null>(null);
+  const [zoningPdfs, setZoningPdfs] = useState<File[]>([]);
   const [loadingImportZoning, setLoadingImportZoning] = useState(false);
 
   const [copyBrief, setCopyBrief] = useState("");
-  const [copyBriefFile, setCopyBriefFile] = useState<File | null>(null);
+  const [copyBriefFiles, setCopyBriefFiles] = useState<File[]>([]);
   const [keywords, setKeywords] = useState("");
-  const [keywordsFile, setKeywordsFile] = useState<File | null>(null);
+  const [keywordsFiles, setKeywordsFiles] = useState<File[]>([]);
 
   const [loadingZoning, setLoadingZoning] = useState(false);
   const [loadingCopy, setLoadingCopy] = useState(false);
@@ -327,11 +327,11 @@ export default function Home() {
     setPdfUrl("");
     setFiles([]);
     setCopyBrief("");
-    setCopyBriefFile(null);
+    setCopyBriefFiles([]);
     setKeywords("");
-    setKeywordsFile(null);
+    setKeywordsFiles([]);
     setHasExistingZoning(false);
-    setZoningPdf(null);
+    setZoningPdfs([]);
     setStep("brief");
     setError(null);
     setView("project");
@@ -348,7 +348,7 @@ export default function Home() {
     setCopyBrief(project.copyBrief || "");
     setKeywords(project.keywords || "");
     setHasExistingZoning(false);
-    setZoningPdf(null);
+    setZoningPdfs([]);
     setStep(project.copy ? "copy" : project.zoning ? "zoning" : "brief");
     if (project.copy && project.zoning) {
       // Extraire les noms de pages depuis le ZONING (plus fiable)
@@ -411,17 +411,36 @@ export default function Home() {
 
   const removeFile = (i: number) => setFiles((prev) => prev.filter((_, idx) => idx !== i));
 
+  const addZoningPdfs = (incoming: FileList | null) => {
+    if (!incoming) return;
+    const pdfs = Array.from(incoming).filter((f) => f.type === "application/pdf");
+    setZoningPdfs((prev) => [...prev, ...pdfs]);
+  };
+
+  const addCopyBriefPdfs = (incoming: FileList | null) => {
+    if (!incoming) return;
+    const pdfs = Array.from(incoming).filter((f) => f.type === "application/pdf");
+    setCopyBriefFiles((prev) => [...prev, ...pdfs]);
+  };
+
+  const addKeywordsCsvs = (incoming: FileList | null) => {
+    if (!incoming) return;
+    const csvs = Array.from(incoming).filter((f) => f.name.toLowerCase().endsWith(".csv"));
+    setKeywordsFiles((prev) => [...prev, ...csvs]);
+  };
+
   const handleImportZoning = async () => {
-    if (!zoningPdf) return;
+    if (zoningPdfs.length === 0) return;
     setLoadingImportZoning(true);
     setError(null);
     try {
       const formData = new FormData();
-      formData.append("file", zoningPdf);
+      zoningPdfs.forEach((f) => formData.append("file", f));
       const response = await fetch("/api/import-zoning", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      const projectName = zoningPdf.name.replace(".pdf", "").slice(0, 40) || "Projet sans nom";
+      const projectName =
+        zoningPdfs[0].name.replace(/\.pdf$/i, "").slice(0, 40) || "Projet sans nom";
       await updateProject({ zoning: data.zoning, name: projectName });
       setStep("zoning");
     } catch (err: unknown) {
@@ -569,7 +588,9 @@ export default function Home() {
     if (url) context += `### URL du site existant\n${url}\n\n`;
     if (notes) context += `### Notes d'entretien\n${notes}\n\n`;
     if (copyBrief) context += `### Brief copywriting\n${copyBrief}\n\n`;
-    if (keywords) context += `### Mots-clés SEO\n${keywords}\n\n`;
+    const keywordsFromFiles = await Promise.all(keywordsFiles.map((f) => f.text()));
+    const keywordsMerged = [keywords, ...keywordsFromFiles].filter((s) => s.trim()).join("\n\n");
+    if (keywordsMerged) context += `### Mots-clés SEO\n${keywordsMerged}\n\n`;
 
     try {
       const results: { name: string; content: string }[] = [...initialCopyPages];
@@ -592,6 +613,7 @@ export default function Home() {
           "previousPages",
           JSON.stringify(results.filter((r) => r.content).map((r) => ({ name: r.name, content: r.content })))
         );
+        copyBriefFiles.forEach((f) => formData.append("copyBriefFile", f));
 
         const response = await fetch("/api/generate-copy", {
           method: "POST",
@@ -611,8 +633,10 @@ export default function Home() {
       setGeneratingPageIndex(-1);
 
       const fullCopy = results.map((p) => p.content).join("\n\n");
-      await updateProject({ copy: fullCopy, copyBrief, keywords });
-      setCurrentProject((prev) => (prev ? { ...prev, copy: fullCopy } : prev));
+      const keywordsMergedForSave = [keywords, ...keywordsFromFiles].filter((s) => s.trim()).join("\n\n");
+      await updateProject({ copy: fullCopy, copyBrief, keywords: keywordsMergedForSave });
+      setKeywords(keywordsMergedForSave);
+      setCurrentProject((prev) => (prev ? { ...prev, copy: fullCopy, keywords: keywordsMergedForSave } : prev));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
       setStep("copy-brief");
@@ -1134,15 +1158,29 @@ export default function Home() {
               <div className="space-y-4">
                 <div
                   onClick={() => document.getElementById("zoning-pdf-input")?.click()}
-                  className="border-2 border-dashed border-[#E5E5E5] hover:border-[#2E1343] bg-white rounded-xl p-10 text-center cursor-pointer transition-colors"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragging(true);
+                  }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragging(false);
+                    addZoningPdfs(e.dataTransfer.files);
+                  }}
+                  className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
+                    dragging ? "border-[#2E1343] bg-[#F5F5F5]" : "border-[#E5E5E5] hover:border-[#2E1343] bg-white"
+                  }`}
                 >
                   <IconUpload className="w-8 h-8 mx-auto mb-3 text-[#6B6B6B]" />
                   <div className="text-[#6B6B6B] text-sm">
-                    {zoningPdf ? (
-                      <span className="text-[#220D31] font-medium">{zoningPdf.name}</span>
+                    {zoningPdfs.length > 0 ? (
+                      <span className="text-[#220D31] font-medium">
+                        {zoningPdfs.length} PDF{zoningPdfs.length > 1 ? "s" : ""} sélectionné{zoningPdfs.length > 1 ? "s" : ""}
+                      </span>
                     ) : (
                       <>
-                        Glissez votre PDF de zoning ici ou <span className="text-[#220D31] underline">parcourir</span>
+                        Glissez vos PDF de zoning ici ou <span className="text-[#220D31] underline">parcourir</span>
                       </>
                     )}
                   </div>
@@ -1151,10 +1189,32 @@ export default function Home() {
                 <input
                   id="zoning-pdf-input"
                   type="file"
+                  multiple
                   accept=".pdf"
-                  onChange={(e) => setZoningPdf(e.target.files?.[0] || null)}
+                  onChange={(e) => addZoningPdfs(e.target.files)}
                   className="hidden"
                 />
+
+                {zoningPdfs.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {zoningPdfs.map((f, i) => (
+                      <div
+                        key={`${f.name}-${i}`}
+                        className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31]"
+                      >
+                        {f.name}
+                        <button
+                          type="button"
+                          onClick={() => setZoningPdfs((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer p-0.5"
+                          aria-label="Retirer"
+                        >
+                          <IconTrash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {loadingImportZoning ? (
                   <div className="bg-white border border-[#E5E5E5] rounded-2xl p-8 text-center space-y-4">
@@ -1165,7 +1225,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={handleImportZoning}
-                    disabled={!zoningPdf}
+                    disabled={zoningPdfs.length === 0}
                     className={`${btnPrimary} w-full`}
                   >
                     Importer le zoning et passer au copywriting →
@@ -1391,16 +1451,35 @@ export default function Home() {
               >
                 <div className="text-[#6B6B6B] text-sm inline-flex items-center justify-center gap-2">
                   <IconUpload className="w-4 h-4" />
-                  Ou uploader le brief en <span className="text-[#220D31] underline">PDF</span>
+                  Ou uploader le brief en <span className="text-[#220D31] underline">PDF</span> (plusieurs possibles)
                 </div>
               </div>
-              <input id="copy-brief-file" type="file" accept=".pdf" onChange={(e) => setCopyBriefFile(e.target.files?.[0] || null)} className="hidden" />
-              {copyBriefFile && (
-                <div className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31] w-fit">
-                  {copyBriefFile.name}
-                  <button type="button" onClick={() => setCopyBriefFile(null)} className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer" aria-label="Retirer">
-                    <IconTrash className="w-4 h-4" />
-                  </button>
+              <input
+                id="copy-brief-file"
+                type="file"
+                multiple
+                accept=".pdf"
+                onChange={(e) => addCopyBriefPdfs(e.target.files)}
+                className="hidden"
+              />
+              {copyBriefFiles.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {copyBriefFiles.map((f, i) => (
+                    <div
+                      key={`${f.name}-${i}`}
+                      className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31]"
+                    >
+                      {f.name}
+                      <button
+                        type="button"
+                        onClick={() => setCopyBriefFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                        className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer p-0.5"
+                        aria-label="Retirer"
+                      >
+                        <IconTrash className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -1420,16 +1499,35 @@ export default function Home() {
               >
                 <div className="text-[#6B6B6B] text-sm inline-flex items-center justify-center gap-2">
                   <IconUpload className="w-4 h-4" />
-                  Ou uploader les mots-clés en <span className="text-[#220D31] underline">CSV</span>
+                  Ou uploader les mots-clés en <span className="text-[#220D31] underline">CSV</span> (plusieurs possibles)
                 </div>
               </div>
-              <input id="keywords-file" type="file" accept=".csv" onChange={(e) => setKeywordsFile(e.target.files?.[0] || null)} className="hidden" />
-              {keywordsFile && (
-                <div className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31] w-fit">
-                  {keywordsFile.name}
-                  <button type="button" onClick={() => setKeywordsFile(null)} className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer" aria-label="Retirer">
-                    <IconTrash className="w-4 h-4" />
-                  </button>
+              <input
+                id="keywords-file"
+                type="file"
+                multiple
+                accept=".csv"
+                onChange={(e) => addKeywordsCsvs(e.target.files)}
+                className="hidden"
+              />
+              {keywordsFiles.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {keywordsFiles.map((f, i) => (
+                    <div
+                      key={`${f.name}-${i}`}
+                      className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] rounded-lg px-3 py-1.5 text-xs text-[#220D31]"
+                    >
+                      {f.name}
+                      <button
+                        type="button"
+                        onClick={() => setKeywordsFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                        className="text-[#6B6B6B] hover:text-[#220D31] cursor-pointer p-0.5"
+                        aria-label="Retirer"
+                      >
+                        <IconTrash className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -1447,7 +1545,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleGenerateCopy}
-                  disabled={!copyBrief.trim() && !copyBriefFile}
+                  disabled={!copyBrief.trim() && copyBriefFiles.length === 0}
                   className={`${btnPrimary} flex-1 min-w-[200px]`}
                 >
                   Générer le copywriting →
