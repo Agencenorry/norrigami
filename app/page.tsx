@@ -584,6 +584,14 @@ export default function Home() {
         formData.append("pageContent", page.content);
         formData.append("context", context);
         if (currentProject.zoning) formData.append("fullZoning", currentProject.zoning);
+        formData.append(
+          "copyPagesSoFar",
+          JSON.stringify(results.map((r) => ({ name: r.name, content: r.content })))
+        );
+        formData.append(
+          "previousPages",
+          JSON.stringify(results.filter((r) => r.content).map((r) => ({ name: r.name, content: r.content })))
+        );
 
         const response = await fetch("/api/generate-copy", {
           method: "POST",

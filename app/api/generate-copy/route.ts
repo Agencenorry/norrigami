@@ -3,6 +3,25 @@ import { NextRequest, NextResponse } from "next/server";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+function parsePreviousPages(raw: string | null): { name: string; content: string }[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (p): p is { name: string; content: string } =>
+          p !== null &&
+          typeof p === "object" &&
+          typeof (p as { name?: string }).name === "string" &&
+          typeof (p as { content?: string }).content === "string"
+      )
+      .map((p) => ({ name: p.name, content: p.content }));
+  } catch {
+    return [];
+  }
+}
+
 const SYSTEM_COPY = `Tu es un copywriter stratégique senior spécialisé en B2B. Tu rédiges des contenus de site web sobres, directs et incarnés, optimisés naturellement pour le SEO et le GEO.
 
 ═══════════════════════════════════════
@@ -248,6 +267,23 @@ export async function POST(request: NextRequest) {
     const pageContent = formData.get("pageContent") as string;
     const context = formData.get("context") as string;
     const fullZoning = (formData.get("fullZoning") as string | null) ?? "";
+    const previousPagesRaw = formData.get("previousPages") as string | null;
+    const previousPages = parsePreviousPages(previousPagesRaw);
+
+    const isDetailPage = /détail|detail|single|article\s|cas\s/i.test(pageName);
+    const listKeywords = [
+      "blog",
+      "articles",
+      "actualités",
+      "cas clients",
+      "références",
+      "portfolio",
+      "liste",
+    ];
+    const relatedList = isDetailPage
+      ? previousPages.find((p) => listKeywords.some((k) => p.name.toLowerCase().includes(k))) ?? null
+      : null;
+
     const copyBriefFile = formData.get("copyBriefFile") as File | null;
 
     let pdfBlock: Anthropic.DocumentBlockParam | null = null;
@@ -269,9 +305,21 @@ export async function POST(request: NextRequest) {
         ? `### Architecture complète du site (pour cohérence entre pages)\n${fullZoning}\n\n`
         : "";
 
+    const coherenceBlock = relatedList
+      ? `
+### COHÉRENCE OBLIGATOIRE avec la page liste
+Cette page détail DOIT développer un élément déjà présent dans la page liste ci-dessous.
+Reprends exactement les mêmes noms, entreprises, secteurs, auteurs mentionnés.
+Ne crée rien de nouveau qui n'existe pas dans la liste.
+
+Page liste "${relatedList.name}" :
+${relatedList.content}
+`
+      : "";
+
     const prompt = `
 ${zoningGlobal}${context}
-
+${coherenceBlock}
 ### Page à rédiger : "${pageName}"
 ${pageContent}
 
@@ -307,7 +355,14 @@ INSTRUCTIONS CRITIQUES
 
 5. Génère UNIQUEMENT le copywriting pour la page "${pageName}".
 
-6. VÉRIFICATION FINALE OBLIGATOIRE — relis CHAQUE chiffre,
+6. COHÉRENCE LISTE → DÉTAIL :
+   Si tu génères une page détail (article, cas client, étude de cas...),
+   elle doit développer un élément déjà mentionné dans la page liste.
+   - Reprends le même nom d'entreprise, le même secteur, le même auteur
+   - Développe ce qui était résumé sur la page liste
+   - N'invente pas de nouveaux cas ou articles absents de la liste
+
+7. VÉRIFICATION FINALE OBLIGATOIRE — relis CHAQUE chiffre,
    pourcentage, durée, montant que tu as écrit.
    Pour CHAQUE élément chiffré : est-il présent MOT POUR MOT
    dans le brief ci-dessus ?
