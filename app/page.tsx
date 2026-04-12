@@ -736,12 +736,15 @@ export default function Home() {
       const formData = new FormData();
       formData.append("message", inputSnapshot);
       formData.append("zoning", currentProject.zoning || "");
-      const activePage =
-        chatFiles.length === 0
-          ? copyPages.find((p) => p.name === activeCopyPage)?.content || currentProject.copy || ""
-          : currentProject.copy || "";
-      formData.append("copy", activePage);
-      formData.append("activePage", activeCopyPage || "");
+      if (activeCopyPage) {
+        const pageContent =
+          copyPages.find((p) => p.name === activeCopyPage)?.content || "";
+        formData.append("copy", pageContent);
+        formData.append("activePage", activeCopyPage);
+      } else {
+        formData.append("copy", currentProject.copy || "");
+        formData.append("activePage", "");
+      }
       formData.append("history", JSON.stringify(chatMessages));
       filesSnapshot.forEach((f) => formData.append("files", f));
       const response = await fetch("/api/chat", { method: "POST", body: formData });

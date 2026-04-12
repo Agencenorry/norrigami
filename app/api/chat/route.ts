@@ -9,38 +9,38 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const message = formData.get("message") as string;
     const zoning = formData.get("zoning") as string;
+    const activePage = formData.get("activePage") as string;
     const copy = formData.get("copy") as string;
-    const activePage = (formData.get("activePage") as string | null) ?? "";
     const historyRaw = formData.get("history") as string;
     const files = formData.getAll("files") as File[];
     const history = historyRaw ? JSON.parse(historyRaw) : [];
 
-    const systemPrompt = `Tu es un assistant copywriter et architecte web senior.
-Tu travailles sur un projet de site web avec le zoning et le copywriting fournis.
-Tu peux corriger, améliorer, reformuler ou restructurer à la demande.
-Tu peux traiter les retours client fournis en PDF ou texte.
+    const systemPrompt = activePage
+      ? `Tu es un copywriter senior. Tu révises UNIQUEMENT la page "${activePage}".
 
-IMPORTANT : Réponds TOUJOURS en texte, JAMAIS en JSON, JAMAIS en markdown, et sans backticks.
+RÈGLE ABSOLUE : Tu ne modifies que le contenu de la page "${activePage}".
+Tu ne touches à aucune autre page. Tu ne mentionnes pas les autres pages.
 
-Quand tu modifies le zoning, réponds en deux parties séparées par ---ZONING--- :
-1) D'abord une phrase d'explication courte.
-2) Puis la ligne exacte : ---ZONING---
-3) Puis le zoning complet.
+Quand tu modifies le copy, réponds avec le séparateur :
+[texte explicatif court]
+---COPY---
+[copy révisé de la page "${activePage}" UNIQUEMENT]
 
-Exemple :
-J'ai ajouté les 6 pages manquantes dans le Sprint 2.
+COPY ACTUEL DE LA PAGE "${activePage}" :
+${copy}
+
+ZONING DE RÉFÉRENCE :
+${zoning || "Non fourni"}`
+      : `Tu es un assistant copywriter et architecte web senior.
+Tu travailles sur le zoning de ce site web.
+
+Quand tu modifies le zoning :
+[texte explicatif court]
 ---ZONING---
-## Accueil [Sprint 1]
-...
-
-Quand tu modifies le copy, réponds avec ---COPY--- puis le copy complet de CETTE PAGE UNIQUEMENT.
-
-Sinon, réponds normalement en texte (une réponse courte et claire).
+[nouveau zoning complet]
 
 ZONING ACTUEL :
-${zoning || "Pas encore généré"}
-
-${activePage ? `PAGE ACTIVE : ${activePage}\n\nCOPY DE CETTE PAGE :\n${copy}` : `COPY ACTUEL :\n${copy || "Pas encore généré"}`}`;
+${zoning || "Pas encore généré"}`;
 
     const messages: Anthropic.MessageParam[] = [];
     for (const msg of history) {
