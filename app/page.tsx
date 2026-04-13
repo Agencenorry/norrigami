@@ -779,6 +779,11 @@ export default function Home() {
             : "Zoning mis à jour ✓";
         setCurrentProject((prev) => (prev ? { ...prev, zoning: data.updatedZoning } : prev));
         await updateProject({ zoning: data.updatedZoning });
+        const newZoningPages = extractPages(data.updatedZoning);
+        setZoningPages(newZoningPages);
+        if (!newZoningPages.find((p) => p.name === activeZoningPage)) {
+          setActiveZoningPage(newZoningPages[0]?.name || "");
+        }
       } else if (data.updatedCopy && activeCopyPage) {
         assistantText =
           data.message && data.message.length < 200 && !data.message.includes('"updatedCopy"')
