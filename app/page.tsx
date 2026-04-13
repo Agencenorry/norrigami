@@ -255,6 +255,8 @@ export default function Home() {
 
   const [copyPages, setCopyPages] = useState<{ name: string; content: string }[]>([]);
   const [activeCopyPage, setActiveCopyPage] = useState<string>("");
+  const [zoningPages, setZoningPages] = useState<{ name: string; content: string }[]>([]);
+  const [activeZoningPage, setActiveZoningPage] = useState<string>("");
   const [generatingPageIndex, setGeneratingPageIndex] = useState<number>(-1);
 
   const [uxPilotOpen, setUxPilotOpen] = useState(false);
@@ -387,6 +389,14 @@ export default function Home() {
     setWarningsFiles([]);
     setHasExistingZoning(false);
     setZoningPdfs([]);
+    if (project.zoning) {
+      const zPages = extractPages(project.zoning);
+      setZoningPages(zPages);
+      setActiveZoningPage(zPages[0]?.name || "");
+    } else {
+      setZoningPages([]);
+      setActiveZoningPage("");
+    }
     setStep(project.copy ? "copy" : project.zoning ? "zoning" : "brief");
     if (project.copy && project.zoning) {
       // Extraire les noms de pages depuis le ZONING (plus fiable)
@@ -549,6 +559,9 @@ export default function Home() {
       const response = await fetch("/api/generate-zoning", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
+      const zPages = extractPages(data.zoning);
+      setZoningPages(zPages);
+      setActiveZoningPage(zPages[0]?.name || "");
       const projectName = brief.slice(0, 40) || "Projet sans nom";
       await updateProject({ zoning: data.zoning, brief, url, notes, sprints, name: projectName });
       setStep("zoning");
@@ -1565,8 +1578,47 @@ export default function Home() {
               </div>
             </div>
 
+            {zoningPages.length > 1 && (
+              <div className="flex flex-wrap gap-2">
+                {zoningPages.map((page) => (
+                  <button
+                    key={page.name}
+                    type="button"
+                    onClick={() => setActiveZoningPage(page.name)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer
+                      ${activeZoningPage === page.name
+                        ? "bg-[#2E1343] border-[#2E1343] text-white"
+                        : "bg-white border-[#E5E5E5] text-[#220D31] hover:border-[#2E1343]"
+                      }`}
+                  >
+                    {page.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="bg-white border border-[#E5E5E5] rounded-2xl p-8">
-              <div>{renderMarkdown(currentProject.zoning)}</div>
+              <div className="flex justify-end mb-4">
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigator.clipboard.writeText(
+                      zoningPages.find((p) => p.name === activeZoningPage)?.content || currentProject.zoning || ""
+                    )
+                  }
+                  className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
+                >
+                  <IconCopy className="w-4 h-4" />
+                  Copier
+                </button>
+              </div>
+              <div>
+                {renderMarkdown(
+                  zoningPages.length > 1
+                    ? zoningPages.find((p) => p.name === activeZoningPage)?.content || ""
+                    : currentProject.zoning || ""
+                )}
+              </div>
             </div>
 
             {renderCorrectionChat()}
