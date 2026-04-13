@@ -1,5 +1,8 @@
 {
     "functions": {
+      "app/api/generate-zoning/route.ts": {
+        "maxDuration": 120
+      },
       "app/api/generate-copy/route.ts": {
         "maxDuration": 120
       }

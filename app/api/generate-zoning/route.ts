@@ -61,6 +61,7 @@ Règles :
 ### Règles de vocabulaire — OBLIGATOIRE
 - Pas d'anglicismes : "Social Proof" → "Preuves sociales", "Hero Section" → "Accroche" ou "Introduction", "Call to Action" → "Appel à l'action"
 - Dans les blocs de chiffres/statistiques : ne jamais utiliser le mot "records"
+- N'utilise jamais le mot "prévu" ou "prévu :" dans le zoning
 - Tous les blocs en français
 
 ### Sprints
@@ -128,13 +129,14 @@ export async function POST(request: NextRequest) {
     const zoningContent = await buildContent(files, pdfUrl, userPrompt);
     const zoningMsg = await createWithRetry({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 6000,
+      max_tokens: 8000,
       system: SYSTEM_ZONING,
       messages: [{ role: "user", content: zoningContent }],
     });
 
     const zoning = zoningMsg.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
-    return NextResponse.json({ zoning });
+    const cleanZoning = zoning.replace(/prévu\s*:\s*/gi, "").replace(/prévu/gi, "");
+    return NextResponse.json({ zoning: cleanZoning });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Erreur lors de la génération du zoning" }, { status: 500 });
