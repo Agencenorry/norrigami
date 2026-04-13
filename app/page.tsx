@@ -1530,6 +1530,13 @@ export default function Home() {
               <div className="flex gap-2 flex-wrap items-center">
                 <button
                   type="button"
+                  onClick={() => setStep("brief")}
+                  className={`${btnSecondary} text-xs py-2`}
+                >
+                  Regénérer le zoning
+                </button>
+                <button
+                  type="button"
                   onClick={() => navigator.clipboard.writeText(currentProject.zoning || "")}
                   className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
                 >
