@@ -557,8 +557,21 @@ export default function Home() {
       formData.append("pdfUrl", pdfUrl);
       files.forEach((f) => formData.append("files", f));
       const response = await fetch("/api/generate-zoning", { method: "POST", body: formData });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
+      if (!response.ok) {
+        const rawError = await response.text();
+        let errorMessage = "Impossible de generer le zoning pour le moment.";
+        try {
+          const parsed = JSON.parse(rawError) as { error?: string };
+          if (parsed?.error) errorMessage = parsed.error;
+        } catch {
+          if (rawError?.trim()) errorMessage = `Erreur serveur (${response.status})`;
+        }
+        throw new Error(errorMessage);
+      }
+      const data = (await response.json()) as { zoning?: string };
+      if (!data?.zoning) {
+        throw new Error("Le serveur a renvoye une reponse invalide.");
+      }
       const zPages = extractPages(data.zoning);
       setZoningPages(zPages);
       setActiveZoningPage(zPages[0]?.name || "");
@@ -566,7 +579,7 @@ export default function Home() {
       await updateProject({ zoning: data.zoning, brief, url, notes, sprints, name: projectName });
       setStep("zoning");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      setError(err instanceof Error ? err.message : "Une erreur est survenue pendant la generation du zoning.");
     } finally {
       setLoadingZoning(false);
     }

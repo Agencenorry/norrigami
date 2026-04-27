@@ -1,7 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+type ApiError = {
+  message: string;
+  status: number;
+};
 
 const SYSTEM_ZONING = `Tu es un expert en architecture web et UX. Tu travailles pour une agence de création et refonte de sites web.
 
@@ -87,6 +92,39 @@ async function createWithRetry(
   throw new Error("Max retries reached");
 }
 
+function getApiError(error: unknown): ApiError {
+  const status = (error as { status?: number })?.status;
+  const message = (error as { message?: string })?.message ?? "";
+
+  if (status === 429 || /quota|rate limit|too many requests/i.test(message)) {
+    return {
+      status: 429,
+      message:
+        "Quota Anthropic atteint ou trop de requetes. Merci de reessayer dans quelques instants.",
+    };
+  }
+
+  if (status === 403 || /forbidden|permission|unauthorized|invalid api key/i.test(message)) {
+    return {
+      status: 403,
+      message:
+        "Acces Anthropic refuse (403). Verifiez la cle API et les permissions du projet.",
+    };
+  }
+
+  if (message) {
+    return {
+      status: 500,
+      message: `Erreur Anthropic: ${message}`,
+    };
+  }
+
+  return {
+    status: 500,
+    message: "Erreur lors de la generation du zoning",
+  };
+}
+
 async function buildContent(files: File[], pdfUrl: string, prompt: string): Promise<Anthropic.MessageParam["content"]> {
   const content: Anthropic.MessageParam["content"] = [];
   for (const file of files) {
@@ -136,9 +174,10 @@ export async function POST(request: NextRequest) {
 
     const zoning = zoningMsg.content.map((b) => (b.type === "text" ? b.text : "")).join("\n");
     const cleanZoning = zoning.replace(/prévu\s*:\s*/gi, "").replace(/prévu/gi, "");
-    return NextResponse.json({ zoning: cleanZoning });
-  } catch (error) {
+    return Response.json({ zoning: cleanZoning });
+  } catch (error: unknown) {
     console.error(error);
-    return NextResponse.json({ error: "Erreur lors de la génération du zoning" }, { status: 500 });
+    const apiError = getApiError(error);
+    return Response.json({ error: apiError.message }, { status: apiError.status });
   }
 }
