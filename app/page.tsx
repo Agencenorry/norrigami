@@ -21,6 +21,7 @@ interface Project {
 
 type View = "home" | "project";
 type ProjectStep = "brief" | "zoning" | "copy-brief" | "copy";
+type CopyLanguage = "fr" | "en";
 
 function IconCopy({ className }: { className?: string }) {
   return (
@@ -195,6 +196,7 @@ const btnSecondary =
 const field =
   "w-full bg-white border border-[#E5E5E5] rounded-lg p-3 text-sm text-[#220D31] placeholder-[#9B9B9B] focus:outline-none focus:border-[#2E1343] resize-none transition-colors";
 const card = "bg-white border border-[#E5E5E5] rounded-xl p-5 hover:border-[#2E1343] transition-colors";
+const MAX_TOTAL_PDF_BYTES = 3 * 1024 * 1024;
 
 export default function Home() {
   const [view, setView] = useState<View>("home");
@@ -208,6 +210,7 @@ export default function Home() {
   );
   const [loadingProjects, setLoadingProjects] = useState(true);
 
+  const [projectName, setProjectName] = useState("");
   const [brief, setBrief] = useState("");
   const [url, setUrl] = useState("");
   const [notes, setNotes] = useState("");
@@ -239,6 +242,7 @@ export default function Home() {
 
   const [loadingZoning, setLoadingZoning] = useState(false);
   const [loadingCopy, setLoadingCopy] = useState(false);
+  const [loadingTranslateCopy, setLoadingTranslateCopy] = useState(false);
   const [loadingMiro, setLoadingMiro] = useState(false);
   const [loadingMiroCopy, setLoadingMiroCopy] = useState(false);
 
@@ -254,6 +258,9 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"zoning" | "copy">("zoning");
 
   const [copyPages, setCopyPages] = useState<{ name: string; content: string }[]>([]);
+  const [translatedCopyPages, setTranslatedCopyPages] = useState<{ name: string; content: string }[]>([]);
+  const [translatedCopy, setTranslatedCopy] = useState<string | null>(null);
+  const [copyLanguage, setCopyLanguage] = useState<CopyLanguage>("fr");
   const [activeCopyPage, setActiveCopyPage] = useState<string>("");
   const [zoningPages, setZoningPages] = useState<{ name: string; content: string }[]>([]);
   const [activeZoningPage, setActiveZoningPage] = useState<string>("");
@@ -320,7 +327,7 @@ export default function Home() {
   const createProject = () => {
     const project: Project = {
       id: `project-${Date.now()}`,
-      name: "Nouveau projet",
+      name: "",
       createdAt: new Date().toISOString(),
       brief: "",
       url: "",
@@ -334,6 +341,7 @@ export default function Home() {
       keywords: "",
     };
     setCurrentProject(project);
+    setProjectName("");
     setBrief("");
     setUrl("");
     setNotes("");
@@ -356,6 +364,9 @@ export default function Home() {
     setLexiqueFiles([]);
     setWarnings("");
     setWarningsFiles([]);
+    setTranslatedCopyPages([]);
+    setTranslatedCopy(null);
+    setCopyLanguage("fr");
     setHasExistingZoning(false);
     setZoningPdfs([]);
     setStep("brief");
@@ -367,6 +378,7 @@ export default function Home() {
     console.log("COPY DÉBUT:", project.copy?.substring(0, 500));
     console.log("ZONING DÉBUT:", project.zoning?.substring(0, 500));
     setCurrentProject(project);
+    setProjectName(project.name || "");
     setBrief(project.brief);
     setUrl(project.url);
     setNotes(project.notes);
@@ -387,6 +399,9 @@ export default function Home() {
     setLexiqueFiles([]);
     setWarnings("");
     setWarningsFiles([]);
+    setTranslatedCopyPages([]);
+    setTranslatedCopy(null);
+    setCopyLanguage("fr");
     setHasExistingZoning(false);
     setZoningPdfs([]);
     if (project.zoning) {
@@ -474,6 +489,10 @@ export default function Home() {
 
   const handleImportZoning = async () => {
     if (zoningPdfs.length === 0) return;
+    if (!projectName.trim()) {
+      setError("Le nom du projet est obligatoire.");
+      return;
+    }
     setLoadingImportZoning(true);
     setError(null);
     try {
@@ -482,9 +501,7 @@ export default function Home() {
       const response = await fetch("/api/import-zoning", { method: "POST", body: formData });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      const projectName =
-        zoningPdfs[0].name.replace(/\.pdf$/i, "").slice(0, 40) || "Projet sans nom";
-      await updateProject({ zoning: data.zoning, name: projectName });
+      await updateProject({ zoning: data.zoning, name: projectName.trim() });
       setStep("zoning");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur import zoning");
@@ -546,6 +563,15 @@ export default function Home() {
 
   const handleGenerateZoning = async () => {
     if (!brief.trim() && files.length === 0 && !pdfUrl.trim()) return;
+    if (!projectName.trim()) {
+      setError("Le nom du projet est obligatoire.");
+      return;
+    }
+    const totalPdfSize = files.reduce((acc, file) => acc + file.size, 0);
+    if (totalPdfSize > MAX_TOTAL_PDF_BYTES) {
+      setError("Les documents PDF ne doivent pas depasser 3mb au total");
+      return;
+    }
     setLoadingZoning(true);
     setError(null);
     try {
@@ -575,8 +601,7 @@ export default function Home() {
       const zPages = extractPages(data.zoning);
       setZoningPages(zPages);
       setActiveZoningPage(zPages[0]?.name || "");
-      const projectName = brief.slice(0, 40) || "Projet sans nom";
-      await updateProject({ zoning: data.zoning, brief, url, notes, sprints, name: projectName });
+      await updateProject({ zoning: data.zoning, brief, url, notes, sprints, name: projectName.trim() });
       setStep("zoning");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue pendant la generation du zoning.");
@@ -634,6 +659,9 @@ export default function Home() {
     setError(null);
 
     const pages = extractPages(currentProject.zoning);
+    setTranslatedCopyPages([]);
+    setTranslatedCopy(null);
+    setCopyLanguage("fr");
 
     const initialCopyPages = pages.map((p) => ({ name: p.name, content: "" }));
     setCopyPages(initialCopyPages);
@@ -717,6 +745,57 @@ export default function Home() {
       setGeneratingPageIndex(-1);
     } finally {
       setLoadingCopy(false);
+    }
+  };
+
+  const handleTranslateCopy = async () => {
+    if (!currentProject?.copy || loadingTranslateCopy) return;
+    setLoadingTranslateCopy(true);
+    setError(null);
+    try {
+      if (copyPages.length > 0) {
+        const translatedPages: { name: string; content: string }[] = [];
+
+        for (const page of copyPages) {
+          const response = await fetch("/api/translate-copy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ copy: page.content }),
+          });
+
+          const payload = (await response.json()) as { translatedCopy?: string; error?: string };
+          if (!response.ok) {
+            throw new Error(payload.error || "Erreur pendant la traduction.");
+          }
+
+          translatedPages.push({
+            name: page.name,
+            content: payload.translatedCopy || "",
+          });
+        }
+
+        setTranslatedCopyPages(translatedPages);
+        setTranslatedCopy(translatedPages.map((p) => p.content).join("\n\n"));
+        setCopyLanguage("en");
+        return;
+      }
+
+      const response = await fetch("/api/translate-copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ copy: currentProject.copy }),
+      });
+      const payload = (await response.json()) as { translatedCopy?: string; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || "Erreur pendant la traduction.");
+      }
+      setTranslatedCopy(payload.translatedCopy || "");
+      setTranslatedCopyPages([]);
+      setCopyLanguage("en");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erreur lors de la traduction du copy.");
+    } finally {
+      setLoadingTranslateCopy(false);
     }
   };
 
@@ -1089,6 +1168,9 @@ export default function Home() {
   };
 
   const canGenerate = brief.trim() || files.length > 0 || pdfUrl.trim();
+  const totalPdfSize = files.reduce((acc, file) => acc + file.size, 0);
+  const isPdfSizeExceeded = totalPdfSize > MAX_TOTAL_PDF_BYTES;
+  const canGenerateZoning = Boolean(canGenerate) && !isPdfSizeExceeded && Boolean(projectName.trim());
   const figJamApiUrl = ngrokUrl ? `${ngrokUrl}/api/figjam-zoning` : `https://kore.vercel.app/api/figjam-zoning`;
 
   if (view === "home") {
@@ -1316,6 +1398,20 @@ export default function Home() {
               <p className="text-[#6B6B6B] text-sm">Renseignez les informations disponibles pour générer le zoning.</p>
             </div>
 
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-widest text-[#6B6B6B]">
+                Nom du projet <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                placeholder="Ex: Refonte site Cabinet Martin"
+                className={field}
+                required
+              />
+            </div>
+
             <div
               onClick={() => setHasExistingZoning(!hasExistingZoning)}
               className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-colors ${
@@ -1506,6 +1602,9 @@ export default function Home() {
                       ))}
                     </div>
                   )}
+                  {isPdfSizeExceeded && (
+                    <p className="text-sm text-red-600">Les documents PDF ne doivent pas depasser 3mb au total</p>
+                  )}
 
                   <div className="space-y-2">
                     <label className="text-xs text-[#6B6B6B]">Ou coller l&apos;URL d&apos;un PDF en ligne</label>
@@ -1528,7 +1627,7 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
-                  <button type="button" onClick={handleGenerateZoning} disabled={!canGenerate} className={btnPrimary}>
+                  <button type="button" onClick={handleGenerateZoning} disabled={!canGenerateZoning} className={btnPrimary}>
                     Générer le zoning →
                   </button>
                 )}
@@ -1755,7 +1854,9 @@ export default function Home() {
                 <p className="text-[#6B6B6B] text-sm mt-1">
                   {loadingCopy
                     ? `Génération en cours... (${copyPages.filter((p) => p.content).length}/${copyPages.length} pages)`
-                    : "Zoning et copywriting prêts."}
+                    : loadingTranslateCopy
+                      ? "Traduction en anglais en cours..."
+                      : "Zoning et copywriting prêts."}
                 </p>
               </div>
               <div className="flex gap-2 flex-wrap items-center">
@@ -1764,9 +1865,25 @@ export default function Home() {
                 </button>
                 {!loadingCopy && (
                   <>
+                    {currentProject?.copy && (
+                      <button
+                        type="button"
+                        onClick={handleTranslateCopy}
+                        disabled={loadingTranslateCopy}
+                        className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2 disabled:opacity-50`}
+                      >
+                        {loadingTranslateCopy ? "Traduction..." : "Traduire en anglais"}
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => navigator.clipboard.writeText((currentProject?.zoning || "") + "\n\n" + (currentProject?.copy || ""))}
+                      onClick={() =>
+                        navigator.clipboard.writeText(
+                          (currentProject?.zoning || "") +
+                            "\n\n" +
+                            (copyLanguage === "en" && translatedCopy ? translatedCopy : currentProject?.copy || "")
+                        )
+                      }
                       className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
                     >
                       <IconCopy className="w-4 h-4" />
@@ -1871,6 +1988,29 @@ export default function Home() {
               </div>
             )}
 
+            {activeTab === "copy" && (translatedCopy !== null || translatedCopyPages.length > 0) && (
+              <div className="flex gap-1 bg-white border border-[#E5E5E5] p-1 rounded-lg w-fit">
+                <button
+                  type="button"
+                  onClick={() => setCopyLanguage("fr")}
+                  className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    copyLanguage === "fr" ? "bg-[#2E1343] text-white" : "text-[#6B6B6B] hover:text-[#220D31]"
+                  }`}
+                >
+                  FR
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCopyLanguage("en")}
+                  className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    copyLanguage === "en" ? "bg-[#2E1343] text-white" : "text-[#6B6B6B] hover:text-[#220D31]"
+                  }`}
+                >
+                  EN
+                </button>
+              </div>
+            )}
+
             <div className="bg-white border border-[#E5E5E5] rounded-2xl p-8">
               {activeTab === "zoning" ? (
                 <>
@@ -1904,7 +2044,11 @@ export default function Home() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => navigator.clipboard.writeText(copyPages.find((p) => p.name === activeCopyPage)?.content || "")}
+                          onClick={() => {
+                            const frContent = copyPages.find((p) => p.name === activeCopyPage)?.content || "";
+                            const enContent = translatedCopyPages.find((p) => p.name === activeCopyPage)?.content || "";
+                            navigator.clipboard.writeText(copyLanguage === "en" ? enContent : frContent);
+                          }}
                           className={`${btnSecondary} inline-flex items-center gap-2 text-xs py-2`}
                         >
                           <IconCopy className="w-4 h-4" />
@@ -1912,7 +2056,13 @@ export default function Home() {
                         </button>
                       </div>
                       {copyPages.find((p) => p.name === activeCopyPage)?.content ? (
-                        <div>{renderMarkdown(copyPages.find((p) => p.name === activeCopyPage)?.content || "")}</div>
+                        <div>
+                          {renderMarkdown(
+                            copyLanguage === "en"
+                              ? translatedCopyPages.find((p) => p.name === activeCopyPage)?.content || ""
+                              : copyPages.find((p) => p.name === activeCopyPage)?.content || ""
+                          )}
+                        </div>
                       ) : (
                         <div className="text-center py-12 flex flex-col items-center gap-3">
                           <Spinner className="w-8 h-8" />
@@ -1921,7 +2071,7 @@ export default function Home() {
                       )}
                     </>
                   ) : (
-                    <div>{renderMarkdown(currentProject?.copy || "")}</div>
+                    <div>{renderMarkdown(copyLanguage === "en" ? translatedCopy || "" : currentProject?.copy || "")}</div>
                   )}
                 </>
               )}
