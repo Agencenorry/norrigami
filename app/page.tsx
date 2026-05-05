@@ -196,7 +196,7 @@ const btnSecondary =
 const field =
   "w-full bg-white border border-[#E5E5E5] rounded-lg p-3 text-sm text-[#220D31] placeholder-[#9B9B9B] focus:outline-none focus:border-[#2E1343] resize-none transition-colors";
 const card = "bg-white border border-[#E5E5E5] rounded-xl p-5 hover:border-[#2E1343] transition-colors";
-const MAX_TOTAL_PDF_BYTES = 3 * 1024 * 1024;
+const MAX_TOTAL_PDF_BYTES = 7 * 1024 * 1024;
 
 export default function Home() {
   const [view, setView] = useState<View>("home");
@@ -569,7 +569,7 @@ export default function Home() {
     }
     const totalPdfSize = files.reduce((acc, file) => acc + file.size, 0);
     if (totalPdfSize > MAX_TOTAL_PDF_BYTES) {
-      setError("Les documents PDF ne doivent pas depasser 3mb au total");
+      setError("Les documents PDF ne doivent pas depasser 7mb au total");
       return;
     }
     setLoadingZoning(true);
@@ -1603,7 +1603,7 @@ export default function Home() {
                     </div>
                   )}
                   {isPdfSizeExceeded && (
-                    <p className="text-sm text-red-600">Les documents PDF ne doivent pas depasser 3mb au total</p>
+                    <p className="text-sm text-red-600">Les documents PDF ne doivent pas depasser 7mb au total</p>
                   )}
 
                   <div className="space-y-2">
